@@ -129,7 +129,6 @@ export default function QueueLivePage() {
               <div className="mt-4 rounded-2xl border border-borderSoft bg-surface-2 p-4 sm:p-6">
                 <p className="text-xs font-semibold text-textSecondary">ลำดับคิวใหม่</p>
                 <p className="mt-1 text-4xl font-extrabold tracking-tight sm:text-5xl">#{current.newQueueNo}</p>
-                <p className="mt-1 text-xs text-textSecondary">คิวเดิม #{current.queueNo}</p>
                 <p className="mt-3 text-base font-semibold sm:text-lg">👤 {current.clientName}</p>
                 <p className="mt-1 text-sm text-textSecondary">🧩 {current.jobType} • 📄 {current.pageCount} หน้า</p>
                 <p className="mt-3 inline-flex rounded-full border border-borderSoft bg-surface px-3 py-1 text-xs font-bold text-textPrimary">
@@ -152,7 +151,7 @@ export default function QueueLivePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-lg font-bold">#{item.newQueueNo} • {item.clientName}</p>
-                        <p className="text-xs text-textSecondary">คิวเดิม #{item.queueNo} • {item.jobType} • {item.pageCount} หน้า</p>
+                        <p className="text-xs text-textSecondary">{item.jobType} • {item.pageCount} หน้า</p>
                       </div>
                       <span className="rounded-full border border-borderSoft bg-surface px-3 py-1 text-[11px] font-bold text-textPrimary">
                         {statusLabel(item.status)}
