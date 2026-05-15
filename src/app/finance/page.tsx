@@ -28,7 +28,7 @@ export default function FinancePage() {
 
   const loadEntries = async () => {
     try {
-      const response = await fetch("/api/finance");
+      const response = await fetch("/api/finance", { cache: "no-store" });
       if (response.ok) {
         const data = await response.json();
         setEntries(data);
@@ -99,11 +99,11 @@ export default function FinancePage() {
 
   return (
     <AppShell>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{settings.app.name} {settings.finance.title}</h1>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold sm:text-2xl">{settings.app.name} {settings.finance.title}</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="btn-primary font-semibold"
+          className="btn-primary w-full font-semibold sm:w-auto"
         >
           {settings.finance.addButton}
         </button>
@@ -140,7 +140,7 @@ export default function FinancePage() {
         </section>
       ) : (
         <section className="card">
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-borderSoft">
@@ -198,6 +198,34 @@ export default function FinancePage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="space-y-3 p-4 md:hidden">
+            {sortedEntries.map((entry) => (
+              <article key={entry.id} className="rounded-2xl border border-borderSoft bg-surface/70 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-textSecondary">{new Date(entry.date).toLocaleDateString("th-TH")}</p>
+                    <p className="mt-1 font-semibold text-textPrimary">{entry.description || "-"}</p>
+                    <p className="mt-1 text-sm text-textSecondary">🏷️ {entry.category}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteEntry(entry.id)}
+                    className="rounded-md p-1.5 hover:bg-surface transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${entry.type === "income" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
+                    {entry.type === "income" ? "รายรับ" : "ค่าใช้จ่าย"}
+                  </span>
+                  <p className={`text-sm font-semibold ${entry.type === "income" ? "text-green-500" : "text-red-500"}`}>
+                    {entry.type === "income" ? "+" : "-"}฿{entry.amount.toFixed(2)}
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
       )}

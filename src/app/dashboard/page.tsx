@@ -1,11 +1,29 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useAppSettings } from "@/components/providers/settings-provider";
-import { useRealtimeQueue, useRealtimeTransactions, QueueData, TransactionData } from "@/lib/use-realtime-data";
 
-function statusBadge(status: QueueData["status"]) {
+type QueueStatus = "waiting" | "printing" | "done";
+
+interface QueueData {
+  id: string;
+  queueNo: number;
+  clientName: string;
+  jobType: string;
+  pageCount: number;
+  status: QueueStatus;
+}
+
+interface TransactionData {
+  id: string;
+  type: "income" | "expense";
+  amount: number;
+  category: string;
+  date: string;
+}
+
+function statusBadge(status: QueueStatus) {
   if (status === "waiting") {
     return { label: "⏳ รอคิว", className: "status-chip waiting" };
   }
@@ -17,8 +35,50 @@ function statusBadge(status: QueueData["status"]) {
 
 export default function DashboardPage() {
   const { settings } = useAppSettings();
-  const { queueItems, loading: queueLoading } = useRealtimeQueue();
-  const { transactions, loading: transLoading } = useRealtimeTransactions();
+  const [queueItems, setQueueItems] = useState<QueueData[]>([]);
+  const [transactions, setTransactions] = useState<TransactionData[]>([]);
+  const [queueLoading, setQueueLoading] = useState(true);
+  const [transLoading, setTransLoading] = useState(true);
+
+  useEffect(() => {
+    const loadQueue = async () => {
+      setQueueLoading(true);
+      try {
+        const response = await fetch("/api/queue", { cache: "no-store" });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error ?? "โหลดคิวงานไม่สำเร็จ");
+        setQueueItems(Array.isArray(payload) ? payload : []);
+      } catch {
+        setQueueItems([]);
+      } finally {
+        setQueueLoading(false);
+      }
+    };
+
+    const loadTransactions = async () => {
+      setTransLoading(true);
+      try {
+        const response = await fetch("/api/finance", { cache: "no-store" });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error ?? "โหลดการเงินไม่สำเร็จ");
+        setTransactions(Array.isArray(payload) ? payload : []);
+      } catch {
+        setTransactions([]);
+      } finally {
+        setTransLoading(false);
+      }
+    };
+
+    loadQueue();
+    loadTransactions();
+
+    const timer = window.setInterval(() => {
+      loadQueue();
+      loadTransactions();
+    }, 15000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const latestQueue = useMemo(() => queueItems.slice(0, 10), [queueItems]);
   const latestTransactions = useMemo(() => transactions.slice(0, 10), [transactions]);
@@ -34,7 +94,7 @@ export default function DashboardPage() {
     const expenseToday = todayTransactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
 
     const jobTypeCounts = queueItems.reduce<Record<string, number>>((acc, item) => {
-      acc[item.job_type] = (acc[item.job_type] || 0) + 1;
+      acc[item.jobType] = (acc[item.jobType] || 0) + 1;
       return acc;
     }, {});
     const topJobType = Object.entries(jobTypeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
@@ -61,7 +121,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-4 text-2xl font-bold">{settings.app.name} {settings.dashboard.title}</h1>
+      <h1 className="mb-4 text-xl font-bold sm:text-2xl">{settings.app.name} {settings.dashboard.title}</h1>
       <section className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         <article className="card p-3">
           <p className="text-xs text-textSecondary">⚡ สถานะคิวตอนนี้</p>
@@ -111,10 +171,10 @@ export default function DashboardPage() {
                     const badge = statusBadge(item.status);
                     return (
                       <tr key={item.id} className="border-t border-borderSoft/70">
-                        <td className="px-3 py-2 font-bold">#{item.queue_no}</td>
-                        <td className="px-3 py-2">{item.client_name}</td>
-                        <td className="px-3 py-2">{item.job_type}</td>
-                        <td className="px-3 py-2">{item.page_count}</td>
+                        <td className="px-3 py-2 font-bold">#{item.queueNo}</td>
+                        <td className="px-3 py-2">{item.clientName}</td>
+                        <td className="px-3 py-2">{item.jobType}</td>
+                        <td className="px-3 py-2">{item.pageCount}</td>
                         <td className="px-3 py-2">
                           <span className={badge.className}>{badge.label}</span>
                         </td>

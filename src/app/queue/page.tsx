@@ -3,7 +3,8 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useAppSettings } from "@/components/providers/settings-provider";
-import { ArrowDown, ArrowUp, Download, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ArrowUp, Download, ExternalLink, Pencil, Plus, Save, Search, Star, Trash2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type QueueStatus = "waiting" | "printing" | "done";
@@ -33,15 +34,17 @@ interface QueueInlineEditForm {
 }
 
 export default function QueuePage() {
-  const { settings } = useAppSettings();
-  const queueJobTypes = settings.queuePresets.jobTypes.length
-    ? settings.queuePresets.jobTypes
-    : ["ประเภทงานทั่วไป"];
+  const { settings, saveSettings } = useAppSettings();
+  const queueJobTypes = settings.queuePresets.jobTypes;
+  const [customerPageUrl, setCustomerPageUrl] = useState("");
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+  const [presetMessage, setPresetMessage] = useState("");
+  const [presetSaving, setPresetSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [inlineEditForm, setInlineEditForm] = useState<QueueInlineEditForm>({
     clientName: "",
@@ -80,6 +83,41 @@ export default function QueuePage() {
   useEffect(() => {
     loadQueue();
   }, [loadQueue]);
+
+  useEffect(() => {
+    const nextUrl = `${window.location.origin}/queue/live`;
+    let active = true;
+
+    setCustomerPageUrl(nextUrl);
+
+    const generateQrCode = async () => {
+      try {
+        const QRCode = await import("qrcode");
+        const dataUrl = await QRCode.toDataURL(nextUrl, {
+          width: 420,
+          margin: 2,
+          color: {
+            dark: "#3D2C35",
+            light: "#FFFFFF"
+          }
+        });
+
+        if (active) {
+          setQrCodeDataUrl(dataUrl);
+        }
+      } catch {
+        if (active) {
+          setQrCodeDataUrl("");
+        }
+      }
+    };
+
+    void generateQrCode();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -150,6 +188,55 @@ export default function QueuePage() {
       setError(err instanceof Error ? err.message : "เพิ่มคิวงานไม่สำเร็จ");
     } finally {
       setMutating(false);
+    }
+  };
+
+  const addFavoriteJobType = async () => {
+    const nextType = form.jobType.trim();
+    if (!nextType) {
+      setPresetMessage("กรอกประเภทงานก่อน แล้วค่อยเพิ่มเป็นรายการโปรด");
+      return;
+    }
+
+    if (queueJobTypes.some((item) => item.toLowerCase() === nextType.toLowerCase())) {
+      setPresetMessage("ประเภทงานนี้มีในรายการโปรดแล้ว");
+      return;
+    }
+
+    setPresetSaving(true);
+    setPresetMessage("");
+    try {
+      await saveSettings({
+        ...settings,
+        queuePresets: {
+          ...settings.queuePresets,
+          jobTypes: [...queueJobTypes, nextType]
+        }
+      });
+      setPresetMessage(`เพิ่ม \"${nextType}\" ในรายการโปรดแล้ว`);
+    } catch {
+      setPresetMessage("เพิ่มรายการโปรดไม่สำเร็จ");
+    } finally {
+      setPresetSaving(false);
+    }
+  };
+
+  const removeFavoriteJobType = async (jobType: string) => {
+    setPresetSaving(true);
+    setPresetMessage("");
+    try {
+      await saveSettings({
+        ...settings,
+        queuePresets: {
+          ...settings.queuePresets,
+          jobTypes: queueJobTypes.filter((item) => item !== jobType)
+        }
+      });
+      setPresetMessage(`ลบ \"${jobType}\" ออกจากรายการโปรดแล้ว`);
+    } catch {
+      setPresetMessage("ลบรายการโปรดไม่สำเร็จ");
+    } finally {
+      setPresetSaving(false);
     }
   };
 
@@ -408,20 +495,30 @@ export default function QueuePage() {
 
   return (
     <AppShell>
-      <section className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <section className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{settings.app.name} {settings.sidebar.queue}</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">{settings.app.name} {settings.sidebar.queue}</h1>
           <p className="text-sm text-textSecondary">บริหารคิวงานร้านแบบเรียลไทม์ เพิ่มงานไว เรียงคิวไว ใช้งานง่าย</p>
         </div>
-        <button
-          type="button"
-          onClick={exportXlsx}
-          disabled={exporting || loading}
-          className="inline-flex items-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Download size={14} />
-          {exporting ? "กำลังสร้าง Excel..." : "Export Excel (.xlsx)"}
-        </button>
+        <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
+          <Link
+            href="/queue/live"
+            target="_blank"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold"
+          >
+            <ExternalLink size={14} />
+            เปิดหน้าจอสำหรับลูกค้า
+          </Link>
+          <button
+            type="button"
+            onClick={exportXlsx}
+            disabled={exporting || loading}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Download size={14} />
+            {exporting ? "กำลังสร้าง Excel..." : "Export Excel (.xlsx)"}
+          </button>
+        </div>
       </section>
 
       {error ? (
@@ -449,71 +546,123 @@ export default function QueuePage() {
         </article>
       </section>
 
-      <section className="card mb-4 p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold">ความคืบหน้ารวม</h2>
-          <span className="text-xs font-semibold text-textSecondary">{doneProgress}%</span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
-          <div className="h-full rounded-full bg-gradient-to-r from-accent via-secondary to-primary" style={{ width: `${doneProgress}%` }} />
-        </div>
-      </section>
+      <section className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1.7fr),minmax(320px,1fr)]">
+        <article className="card p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">ความคืบหน้ารวม</h2>
+            <span className="text-xs font-semibold text-textSecondary">{doneProgress}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
+            <div className="h-full rounded-full bg-gradient-to-r from-accent via-secondary to-primary" style={{ width: `${doneProgress}%` }} />
+          </div>
 
-      <section className="mb-4 card p-4">
-        <h2 className="mb-3 text-lg font-semibold">เพิ่มงานเข้าคิว</h2>
-        <form onSubmit={addQueueItem} className="grid gap-3 md:grid-cols-5">
-          <input
-            placeholder="ชื่อลูกค้า"
-            value={form.clientName}
-            onChange={(event) => setForm((prev) => ({ ...prev, clientName: event.target.value }))}
-            className="rounded-xl border border-borderSoft bg-surface p-2"
-            required
-          />
-          <input
-            placeholder="ประเภทงาน"
-            list="queue-jobtype-presets"
-            value={form.jobType}
-            onChange={(event) => setForm((prev) => ({ ...prev, jobType: event.target.value }))}
-            className="rounded-xl border border-borderSoft bg-surface p-2"
-            required
-          />
-          <datalist id="queue-jobtype-presets">
-            {queueJobTypes.map((jobType) => (
-              <option key={jobType} value={jobType} />
-            ))}
-          </datalist>
-          <input
-            placeholder="จำนวนหน้า"
-            type="number"
-            min={1}
-            value={form.pageCount}
-            onChange={(event) => setForm((prev) => ({ ...prev, pageCount: event.target.value }))}
-            className="rounded-xl border border-borderSoft bg-surface p-2"
-            required
-          />
-          <input
-            placeholder="หมายเหตุ (ถ้ามี)"
-            value={form.note}
-            onChange={(event) => setForm((prev) => ({ ...prev, note: event.target.value }))}
-            className="rounded-xl border border-borderSoft bg-surface p-2"
-          />
-          <button type="submit" className="btn-primary inline-flex items-center justify-center gap-2 font-semibold">
-            <Plus size={16} />
-            เพิ่มเข้าคิว
-          </button>
-        </form>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {queueJobTypes.map((jobType) => (
-            <button
-              key={jobType}
-              type="button"
-              className="rounded-full border border-borderSoft px-3 py-1 text-xs font-semibold text-textSecondary hover:bg-surface-2"
-              onClick={() => setForm((prev) => ({ ...prev, jobType }))}
+          <div className="mt-4">
+            <h2 className="mb-3 text-lg font-semibold">เพิ่มงานเข้าคิว</h2>
+            <form onSubmit={addQueueItem} className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              <input
+                placeholder="ชื่อลูกค้า"
+                value={form.clientName}
+                onChange={(event) => setForm((prev) => ({ ...prev, clientName: event.target.value }))}
+                className="rounded-xl border border-borderSoft bg-surface p-2"
+                required
+              />
+              <div className="flex items-center gap-2 md:col-span-2 xl:col-span-1">
+                <input
+                  placeholder="ประเภทงาน"
+                  list="queue-jobtype-presets"
+                  value={form.jobType}
+                  onChange={(event) => setForm((prev) => ({ ...prev, jobType: event.target.value }))}
+                  className="w-full rounded-xl border border-borderSoft bg-surface p-2"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={addFavoriteJobType}
+                  disabled={presetSaving}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-borderSoft bg-surface text-amber-500 disabled:opacity-50"
+                  title="เพิ่มประเภทงานนี้เป็นรายการโปรด"
+                  aria-label="เพิ่มประเภทงานโปรด"
+                >
+                  <Star size={16} />
+                </button>
+              </div>
+              <datalist id="queue-jobtype-presets">
+                {queueJobTypes.map((jobType) => (
+                  <option key={jobType} value={jobType} />
+                ))}
+              </datalist>
+              <input
+                placeholder="จำนวนหน้า"
+                type="number"
+                min={1}
+                value={form.pageCount}
+                onChange={(event) => setForm((prev) => ({ ...prev, pageCount: event.target.value }))}
+                className="rounded-xl border border-borderSoft bg-surface p-2"
+                required
+              />
+              <input
+                placeholder="หมายเหตุ (ถ้ามี)"
+                value={form.note}
+                onChange={(event) => setForm((prev) => ({ ...prev, note: event.target.value }))}
+                className="rounded-xl border border-borderSoft bg-surface p-2 md:col-span-2 xl:col-span-1"
+              />
+              <button type="submit" className="btn-primary inline-flex items-center justify-center gap-2 font-semibold md:col-span-2 xl:col-span-1">
+                <Plus size={16} />
+                เพิ่มเข้าคิว
+              </button>
+            </form>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {queueJobTypes.length === 0 ? <span className="text-xs text-textSecondary">ยังไม่มีประเภทงานโปรด เพิ่มได้จากช่องประเภทงาน</span> : null}
+              {queueJobTypes.map((jobType) => (
+                <button
+                  key={jobType}
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded-full border border-borderSoft px-3 py-1 text-xs font-semibold text-textSecondary hover:bg-surface-2"
+                  onClick={() => setForm((prev) => ({ ...prev, jobType }))}
+                >
+                  {jobType}
+                  <span
+                    role="button"
+                    aria-label={`ลบ ${jobType} จากรายการโปรด`}
+                    className="rounded-full px-1 text-red-500 hover:bg-red-50"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void removeFavoriteJobType(jobType);
+                    }}
+                  >
+                    ×
+                  </span>
+                </button>
+              ))}
+            </div>
+            {presetMessage ? <p className="mt-2 text-xs text-textSecondary">{presetMessage}</p> : null}
+          </div>
+        </article>
+
+        <aside className="card p-4">
+          <p className="text-sm font-semibold">📱 หน้าคิวสำหรับลูกค้า</p>
+          <p className="mt-1 text-xs text-textSecondary">ให้ลูกค้าสแกนดูคิวได้ทันที หรือเปิดลิงก์หน้า live บนแท็บเล็ตหน้าร้าน</p>
+          <div className="mt-4 flex justify-center rounded-2xl border border-dashed border-borderSoft bg-white p-4">
+            {qrCodeDataUrl ? (
+              <img src={qrCodeDataUrl} alt="QR Code for customer queue page" className="h-48 w-48 rounded-2xl sm:h-56 sm:w-56" />
+            ) : (
+              <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-surface-2 text-xs text-textSecondary sm:h-56 sm:w-56">
+                กำลังสร้าง QR Code...
+              </div>
+            )}
+          </div>
+          <p className="mt-3 break-all rounded-2xl bg-surface-2 px-3 py-2 text-xs text-textSecondary">{customerPageUrl || "กำลังสร้างลิงก์ลูกค้า..."}</p>
+          <div className="mt-3">
+            <Link
+              href="/queue/live"
+              target="_blank"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold"
             >
-              {jobType}
-            </button>
-          ))}
-        </div>
+              <ExternalLink size={14} />
+              เปิดหน้า live
+            </Link>
+          </div>
+        </aside>
       </section>
 
       <section className="card p-4">
@@ -580,6 +729,7 @@ export default function QueuePage() {
                       {editingId === item.id ? (
                         <input
                           className="w-full rounded-md border border-borderSoft bg-surface px-2 py-1"
+                          list="queue-jobtype-presets"
                           value={inlineEditForm.jobType}
                           onChange={(event) => setInlineEditForm((prev) => ({ ...prev, jobType: event.target.value }))}
                         />

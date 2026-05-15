@@ -17,7 +17,7 @@ export function MobileNav() {
   ];
 
   return (
-    <nav className="fixed bottom-4 left-1/2 z-50 flex w-[95vw] max-w-xl -translate-x-1/2 items-center justify-between rounded-2xl border border-borderSoft bg-surface/90 px-3 py-2 shadow-card backdrop-blur-xl md:hidden">
+    <nav className="fixed bottom-3 left-1/2 z-50 flex w-[calc(100vw-1rem)] max-w-2xl -translate-x-1/2 items-center justify-between rounded-2xl border border-borderSoft bg-surface/90 px-2 py-2 shadow-card backdrop-blur-xl lg:hidden">
       {items.map((item) => {
         const Icon = item.icon;
         const active = pathname === item.href;
@@ -26,7 +26,7 @@ export function MobileNav() {
           <Link
             key={item.href}
             href={item.href as any}
-            className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[10px] font-semibold ${
+            className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-[10px] font-semibold sm:text-xs ${
               active ? "bg-surface2 text-textPrimary" : "text-textSecondary"
             }`}
           >

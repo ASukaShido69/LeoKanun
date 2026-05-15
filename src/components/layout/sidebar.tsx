@@ -15,7 +15,7 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="hidden h-screen w-60 shrink-0 border-r border-borderSoft/80 bg-surface2/95 p-4 md:block">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-borderSoft/80 bg-surface2/95 p-4 lg:block">
       <div className="mb-6 rounded-2xl border border-borderSoft bg-surface/80 p-4 shadow-card backdrop-blur-md">
         <h1 className="text-2xl font-bold">{settings.app.name}</h1>
         <p className="mt-1 text-xs text-textSecondary">Personal Dashboard</p>

@@ -20,18 +20,16 @@ export interface FinanceFormData {
 }
 
 export function AddFinanceModal({ isOpen, onClose, onSubmit, isLoading }: AddFinanceModalProps) {
-  const { settings } = useAppSettings();
-  const expenseCategories = settings.financePresets.expenseCategories.length
-    ? settings.financePresets.expenseCategories
-    : ["ค่าใช้จ่ายอื่น ๆ"];
-  const incomeCategories = settings.financePresets.incomeCategories.length
-    ? settings.financePresets.incomeCategories
-    : ["รายรับอื่น ๆ"];
+  const { settings, saveSettings } = useAppSettings();
+  const expenseCategories = settings.financePresets.expenseCategories;
+  const incomeCategories = settings.financePresets.incomeCategories;
+  const [presetSaving, setPresetSaving] = useState(false);
+  const [presetMessage, setPresetMessage] = useState("");
 
   const [formData, setFormData] = useState<FinanceFormData>({
     type: "expense",
     amount: 0,
-    category: expenseCategories[0],
+    category: expenseCategories[0] ?? "",
     description: "",
     date: new Date().toISOString().split("T")[0]
   });
@@ -40,17 +38,92 @@ export function AddFinanceModal({ isOpen, onClose, onSubmit, isLoading }: AddFin
 
   useEffect(() => {
     if (!categories.includes(formData.category)) {
-      setFormData((prev) => ({ ...prev, category: categories[0] }));
+      setFormData((prev) => ({ ...prev, category: categories[0] ?? "" }));
     }
   }, [categories, formData.category]);
 
+  const addFavoriteCategory = async () => {
+    const nextCategory = formData.category.trim();
+    if (!nextCategory) {
+      setPresetMessage("กรอกหมวดหมู่ก่อน แล้วค่อยเพิ่มเป็นรายการโปรด");
+      return;
+    }
+
+    const source = formData.type === "income" ? incomeCategories : expenseCategories;
+    if (source.some((item) => item.toLowerCase() === nextCategory.toLowerCase())) {
+      setPresetMessage("หมวดหมู่นี้มีในรายการโปรดแล้ว");
+      return;
+    }
+
+    setPresetSaving(true);
+    setPresetMessage("");
+    try {
+      if (formData.type === "income") {
+        await saveSettings({
+          ...settings,
+          financePresets: {
+            ...settings.financePresets,
+            incomeCategories: [...incomeCategories, nextCategory]
+          }
+        });
+      } else {
+        await saveSettings({
+          ...settings,
+          financePresets: {
+            ...settings.financePresets,
+            expenseCategories: [...expenseCategories, nextCategory]
+          }
+        });
+      }
+      setPresetMessage(`เพิ่ม \"${nextCategory}\" ในรายการโปรดแล้ว`);
+    } catch {
+      setPresetMessage("เพิ่มรายการโปรดไม่สำเร็จ");
+    } finally {
+      setPresetSaving(false);
+    }
+  };
+
+  const removeFavoriteCategory = async (categoryToRemove: string) => {
+    setPresetSaving(true);
+    setPresetMessage("");
+    try {
+      if (formData.type === "income") {
+        await saveSettings({
+          ...settings,
+          financePresets: {
+            ...settings.financePresets,
+            incomeCategories: incomeCategories.filter((item) => item !== categoryToRemove)
+          }
+        });
+      } else {
+        await saveSettings({
+          ...settings,
+          financePresets: {
+            ...settings.financePresets,
+            expenseCategories: expenseCategories.filter((item) => item !== categoryToRemove)
+          }
+        });
+      }
+      setPresetMessage(`ลบ \"${categoryToRemove}\" ออกจากรายการโปรดแล้ว`);
+    } catch {
+      setPresetMessage("ลบรายการโปรดไม่สำเร็จ");
+    } finally {
+      setPresetSaving(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.category.trim()) {
+      setPresetMessage("กรุณาระบุหมวดหมู่");
+      return;
+    }
+
     await onSubmit(formData);
     setFormData({
       type: "expense",
       amount: 0,
-      category: expenseCategories[0],
+      category: settings.financePresets.expenseCategories[0] ?? "",
       description: "",
       date: new Date().toISOString().split("T")[0]
     });
@@ -100,17 +173,51 @@ export function AddFinanceModal({ isOpen, onClose, onSubmit, isLoading }: AddFin
           <label className="block text-sm font-medium text-textPrimary">
             {settings.finance.modal.category}
           </label>
-          <select
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            className="mt-1 w-full rounded-md border border-borderSoft bg-surface-2 px-3 py-2 text-textPrimary focus:outline-none focus:ring-2 focus:ring-primary"
-          >
+          <div className="mt-1 flex items-center gap-2">
+            <input
+              list="finance-category-presets"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              placeholder="พิมพ์หรือเลือกหมวดหมู่"
+              className="w-full rounded-md border border-borderSoft bg-surface-2 px-3 py-2 text-textPrimary focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button
+              type="button"
+              onClick={addFavoriteCategory}
+              disabled={presetSaving}
+              className="rounded-md border border-borderSoft px-3 py-2 text-xs font-semibold text-amber-600 disabled:opacity-50"
+            >
+              +โปรด
+            </button>
+          </div>
+          <datalist id="finance-category-presets">
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
+              <option key={cat} value={cat} />
             ))}
-          </select>
+          </datalist>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {categories.length === 0 ? <span className="text-xs text-textSecondary">ยังไม่มีหมวดหมู่โปรด</span> : null}
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className="inline-flex items-center gap-1 rounded-full border border-borderSoft px-2 py-1 text-xs"
+                onClick={() => setFormData((prev) => ({ ...prev, category: cat }))}
+              >
+                {cat}
+                <span
+                  className="rounded-full px-1 text-red-500 hover:bg-red-50"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void removeFavoriteCategory(cat);
+                  }}
+                >
+                  ×
+                </span>
+              </button>
+            ))}
+          </div>
+          {presetMessage ? <p className="mt-2 text-xs text-textSecondary">{presetMessage}</p> : null}
         </div>
 
         <div>

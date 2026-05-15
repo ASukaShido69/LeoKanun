@@ -51,17 +51,17 @@ export function Topbar() {
   );
 
   return (
-    <header className="mb-6 rounded-2xl border border-borderSoft bg-surface/85 p-4 shadow-card backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-3">
+    <header className="mb-4 rounded-2xl border border-borderSoft bg-surface/85 p-4 shadow-card backdrop-blur-xl sm:mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm text-textSecondary">{settings.topbar.greeting}, {settings.app.name}</p>
-          <h2 className="text-lg font-bold">{thaiDate(now)}</h2>
+          <h2 className="text-base font-bold sm:text-lg">{thaiDate(now)}</h2>
           <p className="text-sm text-textSecondary">{settings.topbar.timePrefix} {time} {settings.topbar.timeSuffix}</p>
         </div>
         <button
           type="button"
           onClick={toggleTheme}
-          className="inline-flex items-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-xs font-semibold text-textPrimary hover:bg-surface2"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-xs font-semibold text-textPrimary hover:bg-surface2 sm:w-auto"
           aria-label="Toggle color theme"
           title="สลับธีมสว่าง/มืด"
         >

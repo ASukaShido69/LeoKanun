@@ -1,6 +1,6 @@
-export async function sendFlexMessageToLine(flexMessage: Record<string, unknown>) {
+export async function sendLineMessages(messages: Record<string, unknown>[], to?: string) {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  const userId = process.env.LINE_USER_ID;
+  const userId = to ?? process.env.LINE_USER_ID;
 
   if (!token || !userId) {
     throw new Error("Missing LINE_CHANNEL_ACCESS_TOKEN or LINE_USER_ID");
@@ -14,7 +14,7 @@ export async function sendFlexMessageToLine(flexMessage: Record<string, unknown>
     },
     body: JSON.stringify({
       to: userId,
-      messages: [flexMessage]
+      messages
     })
   });
 
@@ -22,4 +22,8 @@ export async function sendFlexMessageToLine(flexMessage: Record<string, unknown>
     const message = await response.text();
     throw new Error(message);
   }
+}
+
+export async function sendFlexMessageToLine(flexMessage: Record<string, unknown>) {
+  await sendLineMessages([flexMessage]);
 }

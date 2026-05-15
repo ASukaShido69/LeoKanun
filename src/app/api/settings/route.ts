@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
 import { appSettingsSchema } from "@/lib/settings-schema";
+import { normalizeAppSettings } from "@/lib/settings-normalizer";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const SETTINGS_KEY = "global";
@@ -28,12 +29,24 @@ async function readSettingsFromDb() {
     return DEFAULT_SETTINGS;
   }
 
-  const parsed = appSettingsSchema.safeParse(data.settings_json);
-  if (!parsed.success) {
-    throw new Error("Invalid settings_json in database");
+  const normalized = normalizeAppSettings(data.settings_json);
+
+  // Auto-repair legacy/broken settings shape in DB.
+  if (JSON.stringify(normalized) !== JSON.stringify(data.settings_json)) {
+    const { error: updateError } = await supabaseAdmin.from("app_settings").upsert(
+      {
+        settings_key: SETTINGS_KEY,
+        settings_json: normalized
+      },
+      { onConflict: "settings_key" }
+    );
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
   }
 
-  return parsed.data;
+  return normalized;
 }
 
 export async function GET() {

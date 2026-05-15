@@ -22,17 +22,22 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
 }
 
 export default function SettingsPage() {
-  const { settings, loading, error, saveSettings, resetSettings } = useAppSettings();
+  const { settings, loading, error, saveSettings } = useAppSettings();
   const [draft, setDraft] = useState<AppSettingsSchema>(DEFAULT_SETTINGS as AppSettingsSchema);
   const [message, setMessage] = useState("");
   const [tab, setTab] = useState<"basic" | "layout" | "json">("basic");
   const [isLineModalOpen, setIsLineModalOpen] = useState(false);
   const [lineResult, setLineResult] = useState("");
   const [lineLoading, setLineLoading] = useState(false);
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     setDraft(settings);
   }, [settings]);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   async function onSave() {
     try {
@@ -47,16 +52,6 @@ export default function SettingsPage() {
       setMessage(settings.settingsPage.successMessage);
     } catch {
       setMessage(settings.settingsPage.invalidJsonMessage);
-    }
-  }
-
-  async function onReset() {
-    try {
-      await resetSettings();
-      setDraft(DEFAULT_SETTINGS);
-      setMessage("");
-    } catch {
-      setMessage("รีเซ็ตไม่สำเร็จ");
     }
   }
 
@@ -140,12 +135,12 @@ export default function SettingsPage() {
       {loading ? <p className="text-sm text-textSecondary">กำลังโหลดการตั้งค่า...</p> : null}
       {error ? <p className="text-sm text-red-500">เกิดข้อผิดพลาด: {error}</p> : null}
 
-      <div className="mb-4 flex gap-2 border-b border-borderSoft">
+      <div className="mb-4 flex gap-2 overflow-x-auto border-b border-borderSoft pb-1">
         {["basic", "layout", "json"].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t as "basic" | "layout" | "json")}
-            className={`px-4 py-2 font-semibold transition ${tab === t ? "border-b-2 border-primary text-primary" : "text-textSecondary hover:text-textPrimary"}`}
+            className={`shrink-0 whitespace-nowrap px-4 py-2 font-semibold transition ${tab === t ? "border-b-2 border-primary text-primary" : "text-textSecondary hover:text-textPrimary"}`}
           >
             {t === "basic" ? "📱 App" : t === "layout" ? "🎨 UI" : "💾 JSON"}
           </button>
@@ -243,12 +238,9 @@ export default function SettingsPage() {
         </section>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <button type="button" className="btn-primary font-semibold" onClick={onSave}>
           {settings.settingsPage.saveButton}
-        </button>
-        <button type="button" className="rounded-button border border-borderSoft bg-white px-4 py-2 font-semibold" onClick={onReset}>
-          {settings.settingsPage.resetButton}
         </button>
         <button type="button" className="rounded-button border border-primary/30 bg-primary/10 px-4 py-2 font-semibold text-primary" onClick={exportConfig}>
           ⬇️ Export Settings
@@ -310,6 +302,12 @@ export default function SettingsPage() {
               className="mt-1 w-full rounded-xl border border-borderSoft p-2"
             />
           </label>
+
+          <div className="rounded-xl border border-borderSoft bg-surface p-3">
+            <p className="text-sm font-semibold">Webhook สำหรับยิง LINE Message API</p>
+            <p className="mt-1 text-xs text-textSecondary">เรียก endpoint นี้เพื่อส่งข้อความหรือ flex message เข้า LINE ได้โดยตรง</p>
+            <pre className="mt-2 overflow-auto rounded-lg bg-surface-2 p-3 text-[11px] text-textSecondary">{`${origin || "https://your-domain.com"}/api/line/webhook/message\nHeaders: Content-Type: application/json\nOptional: x-webhook-secret: YOUR_LINE_WEBHOOK_SECRET\nBody: {\n  "text": "ทดสอบส่งข้อความจาก webhook"\n}`}</pre>
+          </div>
 
           <button
             type="button"
