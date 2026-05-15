@@ -3,8 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useAppSettings } from "@/components/providers/settings-provider";
-import Link from "next/link";
-import { ArrowDown, ArrowUp, Download, ExternalLink, Pencil, Plus, Save, Search, Star, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, Pencil, Plus, Save, Search, Star, Trash2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type QueueStatus = "waiting" | "printing" | "done";
@@ -36,8 +35,6 @@ interface QueueInlineEditForm {
 export default function QueuePage() {
   const { settings, saveSettings } = useAppSettings();
   const queueJobTypes = settings.queuePresets.jobTypes;
-  const [customerPageUrl, setCustomerPageUrl] = useState("");
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
@@ -83,41 +80,6 @@ export default function QueuePage() {
   useEffect(() => {
     loadQueue();
   }, [loadQueue]);
-
-  useEffect(() => {
-    const nextUrl = `${window.location.origin}/queue/live`;
-    let active = true;
-
-    setCustomerPageUrl(nextUrl);
-
-    const generateQrCode = async () => {
-      try {
-        const QRCode = await import("qrcode");
-        const dataUrl = await QRCode.toDataURL(nextUrl, {
-          width: 420,
-          margin: 2,
-          color: {
-            dark: "#3D2C35",
-            light: "#FFFFFF"
-          }
-        });
-
-        if (active) {
-          setQrCodeDataUrl(dataUrl);
-        }
-      } catch {
-        if (active) {
-          setQrCodeDataUrl("");
-        }
-      }
-    };
-
-    void generateQrCode();
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -501,14 +463,6 @@ export default function QueuePage() {
           <p className="text-sm text-textSecondary">บริหารคิวงานร้านแบบเรียลไทม์ เพิ่มงานไว เรียงคิวไว ใช้งานง่าย</p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto">
-          <Link
-            href="/queue/live"
-            target="_blank"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold"
-          >
-            <ExternalLink size={14} />
-            เปิดหน้าจอสำหรับลูกค้า
-          </Link>
           <button
             type="button"
             onClick={exportXlsx}
@@ -546,7 +500,7 @@ export default function QueuePage() {
         </article>
       </section>
 
-      <section className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1.7fr),minmax(320px,1fr)]">
+      <section className="mb-4">
         <article className="card p-4">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold">ความคืบหน้ารวม</h2>
@@ -638,31 +592,6 @@ export default function QueuePage() {
             {presetMessage ? <p className="mt-2 text-xs text-textSecondary">{presetMessage}</p> : null}
           </div>
         </article>
-
-        <aside className="card p-4">
-          <p className="text-sm font-semibold">📱 หน้าคิวสำหรับลูกค้า</p>
-          <p className="mt-1 text-xs text-textSecondary">ให้ลูกค้าสแกนดูคิวได้ทันที หรือเปิดลิงก์หน้า live บนแท็บเล็ตหน้าร้าน</p>
-          <div className="mt-4 flex justify-center rounded-2xl border border-dashed border-borderSoft bg-white p-4">
-            {qrCodeDataUrl ? (
-              <img src={qrCodeDataUrl} alt="QR Code for customer queue page" className="h-48 w-48 rounded-2xl sm:h-56 sm:w-56" />
-            ) : (
-              <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-surface-2 text-xs text-textSecondary sm:h-56 sm:w-56">
-                กำลังสร้าง QR Code...
-              </div>
-            )}
-          </div>
-          <p className="mt-3 break-all rounded-2xl bg-surface-2 px-3 py-2 text-xs text-textSecondary">{customerPageUrl || "กำลังสร้างลิงก์ลูกค้า..."}</p>
-          <div className="mt-3">
-            <Link
-              href="/queue/live"
-              target="_blank"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold"
-            >
-              <ExternalLink size={14} />
-              เปิดหน้า live
-            </Link>
-          </div>
-        </aside>
       </section>
 
       <section className="card p-4">
