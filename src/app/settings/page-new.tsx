@@ -114,10 +114,9 @@ export default function SettingsPage() {
           <article className="card space-y-3 p-4">
             <h2 className="font-semibold">Sidebar Navigation</h2>
             <TextField label="Dashboard" value={draft.sidebar.dashboard} onChange={(v) => setDraft({ ...draft, sidebar: { ...draft.sidebar, dashboard: v } })} />
-            <TextField label="Schedule" value={draft.sidebar.schedule} onChange={(v) => setDraft({ ...draft, sidebar: { ...draft.sidebar, schedule: v } })} />
+            <TextField label="Queue" value={draft.sidebar.queue} onChange={(v) => setDraft({ ...draft, sidebar: { ...draft.sidebar, queue: v } })} />
             <TextField label="Tasks" value={draft.sidebar.tasks} onChange={(v) => setDraft({ ...draft, sidebar: { ...draft.sidebar, tasks: v } })} />
             <TextField label="Finance" value={draft.sidebar.finance} onChange={(v) => setDraft({ ...draft, sidebar: { ...draft.sidebar, finance: v } })} />
-            <TextField label="Clients" value={draft.sidebar.clients} onChange={(v) => setDraft({ ...draft, sidebar: { ...draft.sidebar, clients: v } })} />
             <TextField label="Settings" value={draft.sidebar.settings} onChange={(v) => setDraft({ ...draft, sidebar: { ...draft.sidebar, settings: v } })} />
           </article>
           <article className="card space-y-3 p-4">

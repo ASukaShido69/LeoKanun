@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, CheckSquare, DollarSign, LayoutDashboard, Settings, Users } from "lucide-react";
+import { CheckSquare, DollarSign, LayoutDashboard, Settings, ListOrdered } from "lucide-react";
 import { useAppSettings } from "@/components/providers/settings-provider";
 
 export function MobileNav() {
@@ -11,10 +11,9 @@ export function MobileNav() {
 
   const items = [
     { href: "/dashboard", label: settings.sidebar.dashboard, icon: LayoutDashboard },
-    { href: "/schedule", label: settings.sidebar.schedule, icon: CalendarDays },
+    { href: "/queue", label: settings.sidebar.queue, icon: ListOrdered },
     { href: "/tasks", label: settings.sidebar.tasks, icon: CheckSquare },
     { href: "/finance", label: settings.sidebar.finance, icon: DollarSign },
-    { href: "/clients", label: settings.sidebar.clients, icon: Users },
     { href: "/settings", label: settings.sidebar.settings, icon: Settings }
   ];
 

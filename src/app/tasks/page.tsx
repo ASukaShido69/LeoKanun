@@ -49,9 +49,7 @@ export default function TasksPage() {
         body: JSON.stringify({
           title: data.title,
           description: data.description,
-          priority: data.priority,
-          due_date: data.dueDate || null,
-          status: data.status
+          due_date: data.dueDate || null
         })
       });
 
@@ -110,13 +108,6 @@ export default function TasksPage() {
     {} as Record<string, Task[]>
   );
 
-  const priorityColors = {
-    urgent: "bg-red-500/10 text-red-500 border-red-200",
-    high: "bg-orange-500/10 text-orange-500 border-orange-200",
-    medium: "bg-yellow-500/10 text-yellow-500 border-yellow-200",
-    low: "bg-green-500/10 text-green-500 border-green-200"
-  };
-
   const statusLabels = {
     todo: "ต้องทำ",
     in_progress: "กำลังทำ",
@@ -162,11 +153,6 @@ export default function TasksPage() {
                           <p className="mt-1 text-xs text-textSecondary">{task.description}</p>
                         )}
                         <div className="mt-2 flex items-center gap-2">
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${priorityColors[task.priority as keyof typeof priorityColors]}`}
-                          >
-                            {task.priority}
-                          </span>
                           {task.due_date && (
                             <span className="text-[10px] text-textSecondary">
                               ครบกำหนด: {new Date(task.due_date).toLocaleDateString("th-TH")}

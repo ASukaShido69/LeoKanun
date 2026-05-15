@@ -9,10 +9,9 @@ export const appSettingsSchema = z.object({
   }),
   sidebar: z.object({
     dashboard: z.string().min(1),
-    schedule: z.string().min(1),
+    queue: z.string().min(1),
     tasks: z.string().min(1),
     finance: z.string().min(1),
-    clients: z.string().min(1),
     settings: z.string().min(1)
   }),
   topbar: z.object({
@@ -40,29 +39,8 @@ export const appSettingsSchema = z.object({
       nearDeadlineTitle: z.string().min(1),
       nearDeadlineValue: z.string().min(1)
     }),
-    miniCalendarTitle: z.string().min(1),
-    miniCalendarHint: z.string().min(1),
     incomeExpenseTitle: z.string().min(1),
     incomeExpenseHint: z.string().min(1)
-  }),
-  schedule: z.object({
-    title: z.string().min(1),
-    addButton: z.string().min(1),
-    emptyState: z.string().min(1),
-    modal: z.object({
-      title: z.string().min(1),
-      eventTitle: z.string().min(1),
-      eventTitlePlaceholder: z.string().min(1),
-      startDate: z.string().min(1),
-      startTime: z.string().min(1),
-      endDate: z.string().min(1),
-      endTime: z.string().min(1),
-      category: z.string().min(1),
-      status: z.string().min(1),
-      isAllDay: z.string().min(1),
-      save: z.string().min(1),
-      cancel: z.string().min(1)
-    })
   }),
   tasks: z.object({
     title: z.string().min(1),
@@ -74,9 +52,7 @@ export const appSettingsSchema = z.object({
       taskTitlePlaceholder: z.string().min(1),
       description: z.string().min(1),
       descriptionPlaceholder: z.string().min(1),
-      priority: z.string().min(1),
       dueDate: z.string().min(1),
-      status: z.string().min(1),
       save: z.string().min(1),
       cancel: z.string().min(1)
     })
@@ -97,10 +73,6 @@ export const appSettingsSchema = z.object({
       save: z.string().min(1),
       cancel: z.string().min(1)
     })
-  }),
-  clients: z.object({
-    title: z.string().min(1),
-    hint: z.string().min(1)
   }),
   settingsPage: z.object({
     title: z.string().min(1),

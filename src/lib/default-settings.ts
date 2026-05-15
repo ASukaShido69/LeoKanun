@@ -6,10 +6,9 @@ export const DEFAULT_SETTINGS = {
   },
   sidebar: {
     dashboard: "แดชบอร์ด",
-    schedule: "ตารางเวลา",
+    queue: "คิวงานร้าน",
     tasks: "งาน",
     finance: "การเงิน",
-    clients: "ลูกค้า",
     settings: "ตั้งค่า"
   },
   topbar: {
@@ -37,29 +36,8 @@ export const DEFAULT_SETTINGS = {
       nearDeadlineTitle: "งานใกล้ครบกำหนด",
       nearDeadlineValue: "0 งาน"
     },
-    miniCalendarTitle: "ปฏิทินเล็ก",
-    miniCalendarHint: "กำลังโหลดข้อมูลจากปฏิทิน",
     incomeExpenseTitle: "รายรับ-รายจ่าย 6 เดือน",
     incomeExpenseHint: "กำลังเตรียมแสดงข้อมูล"
-  },
-  schedule: {
-    title: "ตารางเวลา",
-    addButton: "+ เพิ่มงาน",
-    emptyState: "ยังไม่มีงานที่ต้องทำ",
-    modal: {
-      title: "เพิ่มงาน",
-      eventTitle: "ชื่องาน",
-      eventTitlePlaceholder: "กรุณาระบุชื่องาน",
-      startDate: "วันที่เริ่มต้น",
-      startTime: "เวลาเริ่มต้น",
-      endDate: "วันที่สิ้นสุด",
-      endTime: "เวลาสิ้นสุด",
-      category: "หมวดหมู่",
-      status: "สถานะ",
-      isAllDay: "ทั้งวัน",
-      save: "บันทึก",
-      cancel: "ยกเลิก"
-    }
   },
   tasks: {
     title: "งาน",
@@ -71,9 +49,7 @@ export const DEFAULT_SETTINGS = {
       taskTitlePlaceholder: "กรุณาระบุชื่องาน",
       description: "คำอธิบาย",
       descriptionPlaceholder: "เพิ่มรายละเอียด",
-      priority: "ความสำคัญ",
       dueDate: "กำหนดส่ง",
-      status: "สถานะ",
       save: "บันทึก",
       cancel: "ยกเลิก"
     }
@@ -94,10 +70,6 @@ export const DEFAULT_SETTINGS = {
       save: "บันทึก",
       cancel: "ยกเลิก"
     }
-  },
-  clients: {
-    title: "ลูกค้า",
-    hint: "รายชื่อลูกค้าและประวัติการทำงาน"
   },
   settingsPage: {
     title: "ตั้งค่าระบบ",

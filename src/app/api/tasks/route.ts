@@ -4,9 +4,9 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 const createTaskSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional().default(""),
-  priority: z.string(),
+  priority: z.string().optional().default("medium"),
   due_date: z.string().nullable().optional(),
-  status: z.string()
+  status: z.string().optional().default("todo")
 });
 
 export async function GET() {

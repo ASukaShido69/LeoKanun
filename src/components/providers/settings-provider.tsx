@@ -2,12 +2,20 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
-import { appSettingsSchema } from "@/lib/settings-schema";
+import { appSettingsSchema, type AppSettingsSchema } from "@/lib/settings-schema";
 
-const AppSettingsContext = createContext<any>(null);
+interface AppSettingsContextValue {
+  settings: AppSettingsSchema;
+  loading: boolean;
+  error: string;
+  saveSettings: (next: AppSettingsSchema) => Promise<void>;
+  resetSettings: () => Promise<void>;
+}
+
+const AppSettingsContext = createContext<AppSettingsContextValue | null>(null);
 
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<any>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<AppSettingsSchema>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -30,10 +38,10 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
         throw new Error("Invalid settings shape from API");
       }
 
-      setSettings(parsed.data);
+      setSettings(parsed.data as AppSettingsSchema);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load settings");
-      setSettings(DEFAULT_SETTINGS);
+      setSettings(DEFAULT_SETTINGS as AppSettingsSchema);
     } finally {
       setLoading(false);
     }
@@ -48,7 +56,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       settings,
       loading,
       error,
-      saveSettings: async (next: any) => {
+      saveSettings: async (next: AppSettingsSchema) => {
         const parsed = appSettingsSchema.safeParse(next);
         if (!parsed.success) {
           throw new Error("Invalid settings payload");
@@ -67,7 +75,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
           throw new Error(payload.error ?? "Failed to save settings");
         }
 
-        setSettings(parsed.data);
+        setSettings(parsed.data as AppSettingsSchema);
       },
       resetSettings: async () => {
         const response = await fetch("/api/settings", {
@@ -83,7 +91,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
           throw new Error(payload.error ?? "Failed to reset settings");
         }
 
-        setSettings(DEFAULT_SETTINGS);
+        setSettings(DEFAULT_SETTINGS as AppSettingsSchema);
       }
     }),
     [settings, loading, error]

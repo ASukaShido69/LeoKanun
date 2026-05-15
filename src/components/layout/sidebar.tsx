@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, DollarSign, LayoutDashboard, Settings, Users, CheckSquare } from "lucide-react";
+import { DollarSign, LayoutDashboard, Settings, CheckSquare, ListOrdered } from "lucide-react";
 import { useAppSettings } from "@/components/providers/settings-provider";
 
 export function Sidebar() {
@@ -9,10 +9,9 @@ export function Sidebar() {
 
   const items = [
     { href: "/dashboard", label: settings.sidebar.dashboard, icon: LayoutDashboard },
-    { href: "/schedule", label: settings.sidebar.schedule, icon: CalendarDays },
+    { href: "/queue", label: settings.sidebar.queue, icon: ListOrdered },
     { href: "/tasks", label: settings.sidebar.tasks, icon: CheckSquare },
     { href: "/finance", label: settings.sidebar.finance, icon: DollarSign },
-    { href: "/clients", label: settings.sidebar.clients, icon: Users },
     { href: "/settings", label: settings.sidebar.settings, icon: Settings }
   ];
 

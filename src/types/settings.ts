@@ -7,10 +7,9 @@ export interface AppSettings {
   };
   sidebar: {
     dashboard: string;
-    schedule: string;
+    queue: string;
     tasks: string;
     finance: string;
-    clients: string;
     settings: string;
   };
   topbar: {
@@ -38,29 +37,8 @@ export interface AppSettings {
       nearDeadlineTitle: string;
       nearDeadlineValue: string;
     };
-    miniCalendarTitle: string;
-    miniCalendarHint: string;
     incomeExpenseTitle: string;
     incomeExpenseHint: string;
-  };
-  schedule: {
-    title: string;
-    addButton: string;
-    emptyState: string;
-    modal: {
-      title: string;
-      eventTitle: string;
-      eventTitlePlaceholder: string;
-      startDate: string;
-      startTime: string;
-      endDate: string;
-      endTime: string;
-      category: string;
-      status: string;
-      isAllDay: string;
-      save: string;
-      cancel: string;
-    };
   };
   tasks: {
     title: string;
@@ -72,9 +50,7 @@ export interface AppSettings {
       taskTitlePlaceholder: string;
       description: string;
       descriptionPlaceholder: string;
-      priority: string;
       dueDate: string;
-      status: string;
       save: string;
       cancel: string;
     };
@@ -95,10 +71,6 @@ export interface AppSettings {
       save: string;
       cancel: string;
     };
-  };
-  clients: {
-    title: string;
-    hint: string;
   };
   settingsPage: {
     title: string;
