@@ -47,15 +47,55 @@ export const appSettingsSchema = z.object({
   schedule: z.object({
     title: z.string().min(1),
     addButton: z.string().min(1),
-    hint: z.string().min(1)
+    emptyState: z.string().min(1),
+    modal: z.object({
+      title: z.string().min(1),
+      eventTitle: z.string().min(1),
+      eventTitlePlaceholder: z.string().min(1),
+      startDate: z.string().min(1),
+      startTime: z.string().min(1),
+      endDate: z.string().min(1),
+      endTime: z.string().min(1),
+      category: z.string().min(1),
+      status: z.string().min(1),
+      isAllDay: z.string().min(1),
+      save: z.string().min(1),
+      cancel: z.string().min(1)
+    })
   }),
   tasks: z.object({
     title: z.string().min(1),
-    hint: z.string().min(1)
+    addButton: z.string().min(1),
+    emptyState: z.string().min(1),
+    modal: z.object({
+      title: z.string().min(1),
+      taskTitle: z.string().min(1),
+      taskTitlePlaceholder: z.string().min(1),
+      description: z.string().min(1),
+      descriptionPlaceholder: z.string().min(1),
+      priority: z.string().min(1),
+      dueDate: z.string().min(1),
+      status: z.string().min(1),
+      save: z.string().min(1),
+      cancel: z.string().min(1)
+    })
   }),
   finance: z.object({
     title: z.string().min(1),
-    hint: z.string().min(1)
+    addButton: z.string().min(1),
+    emptyState: z.string().min(1),
+    modal: z.object({
+      title: z.string().min(1),
+      type: z.string().min(1),
+      amount: z.string().min(1),
+      amountPlaceholder: z.string().min(1),
+      category: z.string().min(1),
+      description: z.string().min(1),
+      descriptionPlaceholder: z.string().min(1),
+      date: z.string().min(1),
+      save: z.string().min(1),
+      cancel: z.string().min(1)
+    })
   }),
   clients: z.object({
     title: z.string().min(1),

@@ -39,7 +39,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
         throw new Error("Invalid settings shape from API");
       }
 
-      setSettings(parsed.data);
+      setSettings(parsed.data as AppSettings);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load settings");
       setSettings(DEFAULT_SETTINGS);
@@ -76,7 +76,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
           throw new Error(payload.error ?? "Failed to save settings");
         }
 
-        setSettings(parsed.data);
+        setSettings(parsed.data as AppSettings);
       },
       resetSettings: async () => {
         const response = await fetch("/api/settings", {

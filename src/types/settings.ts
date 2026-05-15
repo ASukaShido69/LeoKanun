@@ -45,15 +45,55 @@ export interface AppSettings {
   schedule: {
     title: string;
     addButton: string;
-    hint: string;
+    emptyState: string;
+    modal: {
+      title: string;
+      eventTitle: string;
+      eventTitlePlaceholder: string;
+      startDate: string;
+      startTime: string;
+      endDate: string;
+      endTime: string;
+      category: string;
+      status: string;
+      isAllDay: string;
+      save: string;
+      cancel: string;
+    };
   };
   tasks: {
     title: string;
-    hint: string;
+    addButton: string;
+    emptyState: string;
+    modal: {
+      title: string;
+      taskTitle: string;
+      taskTitlePlaceholder: string;
+      description: string;
+      descriptionPlaceholder: string;
+      priority: string;
+      dueDate: string;
+      status: string;
+      save: string;
+      cancel: string;
+    };
   };
   finance: {
     title: string;
-    hint: string;
+    addButton: string;
+    emptyState: string;
+    modal: {
+      title: string;
+      type: string;
+      amount: string;
+      amountPlaceholder: string;
+      category: string;
+      description: string;
+      descriptionPlaceholder: string;
+      date: string;
+      save: string;
+      cancel: string;
+    };
   };
   clients: {
     title: string;

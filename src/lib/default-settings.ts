@@ -7,12 +7,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
     language: "th"
   },
   sidebar: {
-    dashboard: "Dashboard",
-    schedule: "Schedule",
-    tasks: "Tasks",
-    finance: "Finance",
-    clients: "Clients",
-    settings: "Settings"
+    dashboard: "แดชบอร์ด",
+    schedule: "ตารางเวลา",
+    tasks: "งาน",
+    finance: "การเงิน",
+    clients: "ลูกค้า",
+    settings: "ตั้งค่า"
   },
   topbar: {
     greeting: "สวัสดี",
@@ -28,7 +28,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     submitLabel: "เข้าสู่ระบบ"
   },
   dashboard: {
-    title: "Dashboard",
+    title: "แดชบอร์ด",
     cards: {
       todayQueueTitle: "คิวงานวันนี้",
       todayQueueValue: "0 รายการ",
@@ -39,27 +39,67 @@ export const DEFAULT_SETTINGS: AppSettings = {
       nearDeadlineTitle: "งานใกล้ครบกำหนด",
       nearDeadlineValue: "0 งาน"
     },
-    miniCalendarTitle: "Mini Calendar",
-    miniCalendarHint: "เตรียมเชื่อมต่อข้อมูล event จาก Supabase",
+    miniCalendarTitle: "ปฏิทินเล็ก",
+    miniCalendarHint: "กำลังโหลดข้อมูลจากปฏิทิน",
     incomeExpenseTitle: "รายรับ-รายจ่าย 6 เดือน",
-    incomeExpenseHint: "เตรียมวางกราฟ Recharts"
+    incomeExpenseHint: "กำลังเตรียมแสดงข้อมูล"
   },
   schedule: {
-    title: "Schedule",
+    title: "ตารางเวลา",
     addButton: "+ เพิ่มงาน",
-    hint: "พื้นที่สำหรับ Weekly / Monthly / Daily calendar และ drag-and-drop"
+    emptyState: "ยังไม่มีงานที่ต้องทำ",
+    modal: {
+      title: "เพิ่มงาน",
+      eventTitle: "ชื่องาน",
+      eventTitlePlaceholder: "กรุณาระบุชื่องาน",
+      startDate: "วันที่เริ่มต้น",
+      startTime: "เวลาเริ่มต้น",
+      endDate: "วันที่สิ้นสุด",
+      endTime: "เวลาสิ้นสุด",
+      category: "หมวดหมู่",
+      status: "สถานะ",
+      isAllDay: "ทั้งวัน",
+      save: "บันทึก",
+      cancel: "ยกเลิก"
+    }
   },
   tasks: {
-    title: "Tasks",
-    hint: "พื้นที่สำหรับ Kanban + List view + Tiptap editor"
+    title: "งาน",
+    addButton: "+ เพิ่มงาน",
+    emptyState: "ยังไม่มีงาน",
+    modal: {
+      title: "เพิ่มงาน",
+      taskTitle: "ชื่องาน",
+      taskTitlePlaceholder: "กรุณาระบุชื่องาน",
+      description: "คำอธิบาย",
+      descriptionPlaceholder: "เพิ่มรายละเอียด",
+      priority: "ความสำคัญ",
+      dueDate: "กำหนดส่ง",
+      status: "สถานะ",
+      save: "บันทึก",
+      cancel: "ยกเลิก"
+    }
   },
   finance: {
-    title: "Finance",
-    hint: "พื้นที่สำหรับสรุปรายรับรายจ่าย ตาราง และกราฟ"
+    title: "การเงิน",
+    addButton: "+ เพิ่มรายการ",
+    emptyState: "ยังไม่มีรายการ",
+    modal: {
+      title: "เพิ่มรายการ",
+      type: "ประเภท",
+      amount: "จำนวนเงิน",
+      amountPlaceholder: "0.00",
+      category: "หมวดหมู่",
+      description: "คำอธิบาย",
+      descriptionPlaceholder: "เพิ่มรายละเอียด",
+      date: "วันที่",
+      save: "บันทึก",
+      cancel: "ยกเลิก"
+    }
   },
   clients: {
-    title: "Clients",
-    hint: "พื้นที่สำหรับรายการลูกค้าและประวัติงาน"
+    title: "ลูกค้า",
+    hint: "รายชื่อลูกค้าและประวัติการทำงาน"
   },
   settingsPage: {
     title: "ตั้งค่าระบบ",

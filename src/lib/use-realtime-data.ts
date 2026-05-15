@@ -36,24 +36,23 @@ export function useRealtimeEvents() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
-  useEffect(() => {
+  const refetch = async () => {
     setLoading(true);
     setError("");
+    const { data, error: err } = await supabase
+      .from("events")
+      .select("*")
+      .order("start_datetime", { ascending: true });
+    if (err) {
+      setError(err.message);
+    } else {
+      setEvents((data as EventData[]) || []);
+    }
+    setLoading(false);
+  };
 
-    const loadInitial = async () => {
-      const { data, error: err } = await supabase
-        .from("events")
-        .select("*")
-        .order("start_datetime", { ascending: true });
-      if (err) {
-        setError(err.message);
-      } else {
-        setEvents((data as EventData[]) || []);
-      }
-      setLoading(false);
-    };
-
-    loadInitial();
+  useEffect(() => {
+    refetch();
 
     const channel = supabase
       .channel("public:events")
@@ -79,7 +78,7 @@ export function useRealtimeEvents() {
     };
   }, []);
 
-  return { events, loading, error };
+  return { events, loading, error, refetch };
 }
 
 export function useRealtimeTransactions() {
