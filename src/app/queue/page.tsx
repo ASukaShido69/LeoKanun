@@ -455,6 +455,37 @@ export default function QueuePage() {
     }
   };
 
+  const renderManageControls = (item: QueueItem) => (
+    <div className="grid grid-cols-4 gap-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center">
+      {editingId === item.id ? (
+        <>
+          <button type="button" onClick={() => saveInlineEdit(item)} className="rounded-md border border-borderSoft p-1.5 text-green-700" title="บันทึก">
+            <Save size={14} />
+          </button>
+          <button type="button" onClick={cancelInlineEdit} className="rounded-md border border-borderSoft p-1.5" title="ยกเลิกแก้ไข">
+            <X size={14} />
+          </button>
+        </>
+      ) : (
+        <button type="button" onClick={() => startInlineEdit(item)} className="rounded-md border border-borderSoft p-1.5" title="แก้ไขข้อมูลแถว">
+          <Pencil size={14} />
+        </button>
+      )}
+      <button type="button" onClick={() => moveQueue(item.id, "up")} className="rounded-md border border-borderSoft p-1.5" title="เลื่อนขึ้น">
+        <ArrowUp size={14} />
+      </button>
+      <button type="button" onClick={() => moveQueue(item.id, "down")} className="rounded-md border border-borderSoft p-1.5" title="เลื่อนลง">
+        <ArrowDown size={14} />
+      </button>
+      <button type="button" onClick={() => updateStatus(item.id, "waiting")} className="rounded-md border border-borderSoft px-2 py-1 text-xs font-semibold">รอ</button>
+      <button type="button" onClick={() => updateStatus(item.id, "printing")} className="rounded-md border border-borderSoft px-2 py-1 text-xs font-semibold">ทำ</button>
+      <button type="button" onClick={() => updateStatus(item.id, "done")} className="rounded-md border border-borderSoft px-2 py-1 text-xs font-semibold">เสร็จ</button>
+      <button type="button" onClick={() => deleteItem(item.id)} className="rounded-md border border-red-300 p-1.5 text-red-600" title="ลบคิว">
+        <Trash2 size={14} />
+      </button>
+    </div>
+  );
+
   return (
     <AppShell>
       <section className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -617,7 +648,7 @@ export default function QueuePage() {
           </select>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-borderSoft">
+        <div className="hidden overflow-x-auto rounded-xl border border-borderSoft md:block">
           <table className="min-w-full border-collapse text-sm">
             <thead className="bg-surface-2 text-left">
               <tr>
@@ -627,7 +658,7 @@ export default function QueuePage() {
                 <th className="px-3 py-2 font-semibold">จำนวนหน้า</th>
                 <th className="px-3 py-2 font-semibold">สถานะ</th>
                 <th className="px-3 py-2 font-semibold">หมายเหตุ</th>
-                <th className="px-3 py-2 font-semibold">จัดการ</th>
+                <th className="px-3 py-2 text-center font-semibold">จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -685,41 +716,88 @@ export default function QueuePage() {
                       </span>
                     </td>
                     <td className="px-3 py-2 text-textSecondary">{item.note || "-"}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap items-center gap-1">
-                        {editingId === item.id ? (
-                          <>
-                            <button type="button" onClick={() => saveInlineEdit(item)} className="rounded-md border border-borderSoft p-1.5 text-green-700" title="บันทึก">
-                              <Save size={14} />
-                            </button>
-                            <button type="button" onClick={cancelInlineEdit} className="rounded-md border border-borderSoft p-1.5" title="ยกเลิกแก้ไข">
-                              <X size={14} />
-                            </button>
-                          </>
-                        ) : (
-                          <button type="button" onClick={() => startInlineEdit(item)} className="rounded-md border border-borderSoft p-1.5" title="แก้ไขข้อมูลแถว">
-                            <Pencil size={14} />
-                          </button>
-                        )}
-                        <button type="button" onClick={() => moveQueue(item.id, "up")} className="rounded-md border border-borderSoft p-1.5" title="เลื่อนขึ้น">
-                          <ArrowUp size={14} />
-                        </button>
-                        <button type="button" onClick={() => moveQueue(item.id, "down")} className="rounded-md border border-borderSoft p-1.5" title="เลื่อนลง">
-                          <ArrowDown size={14} />
-                        </button>
-                        <button type="button" onClick={() => updateStatus(item.id, "waiting")} className="rounded-md border border-borderSoft px-2 py-1 text-xs font-semibold">รอ</button>
-                        <button type="button" onClick={() => updateStatus(item.id, "printing")} className="rounded-md border border-borderSoft px-2 py-1 text-xs font-semibold">ทำ</button>
-                        <button type="button" onClick={() => updateStatus(item.id, "done")} className="rounded-md border border-borderSoft px-2 py-1 text-xs font-semibold">เสร็จ</button>
-                        <button type="button" onClick={() => deleteItem(item.id)} className="rounded-md border border-red-300 p-1.5 text-red-600" title="ลบคิว">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                    <td className="px-3 py-2 align-top text-center">
+                      {renderManageControls(item)}
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="space-y-3 md:hidden">
+          {loading ? (
+            <div className="rounded-xl border border-borderSoft px-3 py-6 text-center text-textSecondary">กำลังโหลดข้อมูลคิว...</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="rounded-xl border border-borderSoft px-3 py-6 text-center text-textSecondary">ยังไม่มีคิวงานที่ตรงเงื่อนไข</div>
+          ) : (
+            filteredItems.map((item) => (
+              <article key={item.id} className="rounded-xl border border-borderSoft bg-surface/70 p-3">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                  <p className="text-textSecondary">ลำดับคิว</p>
+                  <p className="font-bold">#{item.queueNo}</p>
+
+                  <p className="text-textSecondary">ชื่อลูกค้า</p>
+                  <div>
+                    {editingId === item.id ? (
+                      <input
+                        className="w-full rounded-md border border-borderSoft bg-surface px-2 py-1"
+                        value={inlineEditForm.clientName}
+                        onChange={(event) => setInlineEditForm((prev) => ({ ...prev, clientName: event.target.value }))}
+                      />
+                    ) : (
+                      <p>{item.clientName}</p>
+                    )}
+                  </div>
+
+                  <p className="text-textSecondary">ประเภทงาน</p>
+                  <div>
+                    {editingId === item.id ? (
+                      <input
+                        className="w-full rounded-md border border-borderSoft bg-surface px-2 py-1"
+                        list="queue-jobtype-presets"
+                        value={inlineEditForm.jobType}
+                        onChange={(event) => setInlineEditForm((prev) => ({ ...prev, jobType: event.target.value }))}
+                      />
+                    ) : (
+                      <p>{item.jobType}</p>
+                    )}
+                  </div>
+
+                  <p className="text-textSecondary">จำนวนหน้า</p>
+                  <div>
+                    {editingId === item.id ? (
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-full rounded-md border border-borderSoft bg-surface px-2 py-1"
+                        value={inlineEditForm.pageCount}
+                        onChange={(event) => setInlineEditForm((prev) => ({ ...prev, pageCount: event.target.value }))}
+                      />
+                    ) : (
+                      <p>{item.pageCount}</p>
+                    )}
+                  </div>
+
+                  <p className="text-textSecondary">สถานะ</p>
+                  <div>
+                    <span className={`status-chip ${item.status}`}>
+                      {item.status === "waiting" ? "รอคิว" : item.status === "printing" ? "กำลังทำ" : "เสร็จแล้ว"}
+                    </span>
+                  </div>
+
+                  <p className="text-textSecondary">หมายเหตุ</p>
+                  <p className="text-textPrimary">{item.note || "-"}</p>
+                </div>
+
+                <div className="mt-3 border-t border-borderSoft/70 pt-3">
+                  <p className="mb-2 text-xs font-semibold text-textSecondary">จัดการ</p>
+                  {renderManageControls(item)}
+                </div>
+              </article>
+            ))
+          )}
         </div>
       </section>
 
