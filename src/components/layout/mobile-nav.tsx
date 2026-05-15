@@ -27,7 +27,7 @@ export function MobileNav() {
         return (
           <Link
             key={item.href}
-            href={item.href}
+            href={item.href as any}
             className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[10px] font-semibold ${
               active ? "bg-surface2 text-textPrimary" : "text-textSecondary"
             }`}
