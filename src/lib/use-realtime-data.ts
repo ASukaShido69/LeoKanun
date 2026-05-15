@@ -40,33 +40,42 @@ export function useRealtimeEvents() {
     setLoading(true);
     setError("");
 
-    const subscription = supabase
-      .from("events")
-      .on("*", (payload) => {
-        if (payload.eventType === "INSERT") {
-          setEvents((prev) => [...prev, payload.new as EventData]);
-        } else if (payload.eventType === "UPDATE") {
-          setEvents((prev) =>
-            prev.map((e) => (e.id === (payload.new as EventData).id ? (payload.new as EventData) : e))
-          );
-        } else if (payload.eventType === "DELETE") {
-          setEvents((prev) => prev.filter((e) => e.id !== (payload.old as EventData).id));
-        }
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          const { data, error: err } = await supabase.from("events").select("*").order("start_datetime", { ascending: true });
-          if (err) {
-            setError(err.message);
-          } else {
-            setEvents((data as EventData[]) || []);
+    const loadInitial = async () => {
+      const { data, error: err } = await supabase
+        .from("events")
+        .select("*")
+        .order("start_datetime", { ascending: true });
+      if (err) {
+        setError(err.message);
+      } else {
+        setEvents((data as EventData[]) || []);
+      }
+      setLoading(false);
+    };
+
+    loadInitial();
+
+    const channel = supabase
+      .channel("public:events")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "events" },
+        (payload: any) => {
+          if (payload.eventType === "INSERT") {
+            setEvents((prev) => [...prev, payload.new as EventData]);
+          } else if (payload.eventType === "UPDATE") {
+            setEvents((prev) =>
+              prev.map((e) => (e.id === (payload.new as EventData).id ? (payload.new as EventData) : e))
+            );
+          } else if (payload.eventType === "DELETE") {
+            setEvents((prev) => prev.filter((e) => e.id !== (payload.old as EventData).id));
           }
-          setLoading(false);
         }
-      });
+      )
+      .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, []);
 
@@ -82,36 +91,42 @@ export function useRealtimeTransactions() {
     setLoading(true);
     setError("");
 
-    const subscription = supabase
-      .from("transactions")
-      .on("*", (payload) => {
-        if (payload.eventType === "INSERT") {
-          setTransactions((prev) => [...prev, payload.new as TransactionData]);
-        } else if (payload.eventType === "UPDATE") {
-          setTransactions((prev) =>
-            prev.map((t) => (t.id === (payload.new as TransactionData).id ? (payload.new as TransactionData) : t))
-          );
-        } else if (payload.eventType === "DELETE") {
-          setTransactions((prev) => prev.filter((t) => t.id !== (payload.old as TransactionData).id));
-        }
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          const { data, error: err } = await supabase
-            .from("transactions")
-            .select("*")
-            .order("date", { ascending: false });
-          if (err) {
-            setError(err.message);
-          } else {
-            setTransactions((data as TransactionData[]) || []);
+    const loadInitial = async () => {
+      const { data, error: err } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("date", { ascending: false });
+      if (err) {
+        setError(err.message);
+      } else {
+        setTransactions((data as TransactionData[]) || []);
+      }
+      setLoading(false);
+    };
+
+    loadInitial();
+
+    const channel = supabase
+      .channel("public:transactions")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "transactions" },
+        (payload: any) => {
+          if (payload.eventType === "INSERT") {
+            setTransactions((prev) => [...prev, payload.new as TransactionData]);
+          } else if (payload.eventType === "UPDATE") {
+            setTransactions((prev) =>
+              prev.map((t) => (t.id === (payload.new as TransactionData).id ? (payload.new as TransactionData) : t))
+            );
+          } else if (payload.eventType === "DELETE") {
+            setTransactions((prev) => prev.filter((t) => t.id !== (payload.old as TransactionData).id));
           }
-          setLoading(false);
         }
-      });
+      )
+      .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, []);
 
@@ -127,33 +142,42 @@ export function useRealtimeClients() {
     setLoading(true);
     setError("");
 
-    const subscription = supabase
-      .from("clients")
-      .on("*", (payload) => {
-        if (payload.eventType === "INSERT") {
-          setClients((prev) => [...prev, payload.new as ClientData]);
-        } else if (payload.eventType === "UPDATE") {
-          setClients((prev) =>
-            prev.map((c) => (c.id === (payload.new as ClientData).id ? (payload.new as ClientData) : c))
-          );
-        } else if (payload.eventType === "DELETE") {
-          setClients((prev) => prev.filter((c) => c.id !== (payload.old as ClientData).id));
-        }
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          const { data, error: err } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
-          if (err) {
-            setError(err.message);
-          } else {
-            setClients((data as ClientData[]) || []);
+    const loadInitial = async () => {
+      const { data, error: err } = await supabase
+        .from("clients")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (err) {
+        setError(err.message);
+      } else {
+        setClients((data as ClientData[]) || []);
+      }
+      setLoading(false);
+    };
+
+    loadInitial();
+
+    const channel = supabase
+      .channel("public:clients")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "clients" },
+        (payload: any) => {
+          if (payload.eventType === "INSERT") {
+            setClients((prev) => [...prev, payload.new as ClientData]);
+          } else if (payload.eventType === "UPDATE") {
+            setClients((prev) =>
+              prev.map((c) => (c.id === (payload.new as ClientData).id ? (payload.new as ClientData) : c))
+            );
+          } else if (payload.eventType === "DELETE") {
+            setClients((prev) => prev.filter((c) => c.id !== (payload.old as ClientData).id));
           }
-          setLoading(false);
         }
-      });
+      )
+      .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, []);
 
@@ -169,33 +193,42 @@ export function useRealtimeJobs() {
     setLoading(true);
     setError("");
 
-    const subscription = supabase
-      .from("jobs")
-      .on("*", (payload) => {
-        if (payload.eventType === "INSERT") {
-          setJobs((prev) => [...prev, payload.new as JobData]);
-        } else if (payload.eventType === "UPDATE") {
-          setJobs((prev) =>
-            prev.map((j) => (j.id === (payload.new as JobData).id ? (payload.new as JobData) : j))
-          );
-        } else if (payload.eventType === "DELETE") {
-          setJobs((prev) => prev.filter((j) => j.id !== (payload.old as JobData).id));
-        }
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          const { data, error: err } = await supabase.from("jobs").select("*").order("created_at", { ascending: false });
-          if (err) {
-            setError(err.message);
-          } else {
-            setJobs((data as JobData[]) || []);
+    const loadInitial = async () => {
+      const { data, error: err } = await supabase
+        .from("jobs")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (err) {
+        setError(err.message);
+      } else {
+        setJobs((data as JobData[]) || []);
+      }
+      setLoading(false);
+    };
+
+    loadInitial();
+
+    const channel = supabase
+      .channel("public:jobs")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "jobs" },
+        (payload: any) => {
+          if (payload.eventType === "INSERT") {
+            setJobs((prev) => [...prev, payload.new as JobData]);
+          } else if (payload.eventType === "UPDATE") {
+            setJobs((prev) =>
+              prev.map((j) => (j.id === (payload.new as JobData).id ? (payload.new as JobData) : j))
+            );
+          } else if (payload.eventType === "DELETE") {
+            setJobs((prev) => prev.filter((j) => j.id !== (payload.old as JobData).id));
           }
-          setLoading(false);
         }
-      });
+      )
+      .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, []);
 
