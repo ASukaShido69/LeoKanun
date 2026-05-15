@@ -1,0 +1,3 @@
+-- This project uses ImgBB for file uploads.
+-- Keep this file as a no-op migration placeholder.
+-- No Supabase Storage buckets are required.
