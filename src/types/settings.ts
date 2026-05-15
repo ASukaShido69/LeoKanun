@@ -1,3 +1,4 @@
+// Updated app settings interface with modal support
 export interface AppSettings {
   app: {
     name: string;

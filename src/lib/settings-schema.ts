@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// Updated schema for new settings structure
 export const appSettingsSchema = z.object({
   app: z.object({
     name: z.string().min(1),

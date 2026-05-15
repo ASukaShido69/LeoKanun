@@ -1,6 +1,4 @@
-import type { AppSettings } from "@/types/settings";
-
-export const DEFAULT_SETTINGS: AppSettings = {
+export const DEFAULT_SETTINGS = {
   app: {
     name: "LeoKanun",
     description: "Personal dashboard for freelance life",
@@ -118,4 +116,4 @@ export const DEFAULT_SETTINGS: AppSettings = {
   upload: {
     provider: "imgbb"
   }
-};
+} as any;
