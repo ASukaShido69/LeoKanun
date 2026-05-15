@@ -3,8 +3,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
-import { appSettingsSchema } from "@/lib/settings-schema";
-import type { AppSettings } from "@/types/settings";
+import { appSettingsSchema, type AppSettingsSchema } from "@/lib/settings-schema";
 import { useAppSettings } from "@/components/providers/settings-provider";
 
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
@@ -23,7 +22,7 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
 
 export default function SettingsPage() {
   const { settings, loading, error, saveSettings, resetSettings } = useAppSettings();
-  const [draft, setDraft] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [draft, setDraft] = useState<AppSettingsSchema>(DEFAULT_SETTINGS as AppSettingsSchema);
   const [message, setMessage] = useState("");
   const [tab, setTab] = useState<"basic" | "layout" | "json">("basic");
 
@@ -40,7 +39,7 @@ export default function SettingsPage() {
         return;
       }
 
-      await saveSettings(parsed.data as AppSettings);
+      await saveSettings(parsed.data);
       setMessage(settings.settingsPage.successMessage);
     } catch {
       setMessage(settings.settingsPage.invalidJsonMessage);
