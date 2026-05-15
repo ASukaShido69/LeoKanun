@@ -17,21 +17,27 @@
   --border: #F0D9E8;
   --shadow: rgba(244, 167, 185, 0.15);
   --shadow-strong: rgba(214, 126, 165, 0.25);
+  --surface-elevated: rgba(255, 255, 255, 0.78);
+  --surface-elevated-strong: rgba(255, 255, 255, 0.88);
+  --control-bg: rgba(255, 255, 255, 0.92);
 }
 
 html[data-theme="dark"] {
-  --primary: #f3a3bc;
-  --secondary: #b6a4e3;
-  --accent: #87cda9;
-  --warning: #f9c98d;
-  --background: #161117;
-  --surface: #241b23;
-  --surface-2: #2d2230;
-  --text-primary: #fceff6;
-  --text-secondary: #cfb3c0;
-  --border: #52394a;
-  --shadow: rgba(0, 0, 0, 0.25);
-  --shadow-strong: rgba(0, 0, 0, 0.4);
+  --primary: #eab1c3;
+  --secondary: #9a91c6;
+  --accent: #7fc7ab;
+  --warning: #e9bf8f;
+  --background: #0f1115;
+  --surface: #171a21;
+  --surface-2: #1e232c;
+  --text-primary: #eceff4;
+  --text-secondary: #a8b0bf;
+  --border: #2e3440;
+  --shadow: rgba(0, 0, 0, 0.34);
+  --shadow-strong: rgba(0, 0, 0, 0.55);
+  --surface-elevated: rgba(24, 28, 35, 0.84);
+  --surface-elevated-strong: rgba(28, 33, 41, 0.92);
+  --control-bg: rgba(26, 31, 40, 0.95);
 }
 
 * {
@@ -60,9 +66,7 @@ a {
 
 .card {
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 250, 253, 0.98) 100%),
-    var(--surface);
+  background: linear-gradient(180deg, var(--surface-elevated-strong) 0%, var(--surface-elevated) 100%), var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 10px 24px var(--shadow);
   backdrop-filter: blur(4px);
@@ -90,24 +94,45 @@ a {
 input,
 textarea,
 select {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--control-bg);
+  color: var(--text-primary);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: #e9a8c1;
-  box-shadow: 0 0 0 3px rgba(244, 167, 185, 0.22);
+  border-color: color-mix(in srgb, var(--primary) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
 html[data-theme="dark"] body {
   background:
-    radial-gradient(circle at 16% 8%, rgba(243, 163, 188, 0.18), transparent 32%),
-    radial-gradient(circle at 92% 10%, rgba(182, 164, 227, 0.16), transparent 34%),
-    radial-gradient(circle at 76% 82%, rgba(135, 205, 169, 0.15), transparent 30%),
-    linear-gradient(180deg, #161117 0%, #1a1420 50%, #161117 100%),
+    radial-gradient(circle at 14% 6%, rgba(127, 199, 171, 0.07), transparent 28%),
+    radial-gradient(circle at 88% 10%, rgba(154, 145, 198, 0.09), transparent 32%),
+    radial-gradient(circle at 72% 84%, rgba(234, 177, 195, 0.08), transparent 26%),
+    linear-gradient(180deg, #0d1015 0%, #12161d 48%, #0c0f14 100%),
     var(--background);
+}
+
+html[data-theme="dark"] .btn-primary {
+  background: linear-gradient(120deg, #d697ab 0%, #8f86bd 55%, #71b89f 100%);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .status-chip.waiting {
+  background: rgba(233, 191, 143, 0.17);
+  color: #f8d4a7;
+}
+
+html[data-theme="dark"] .status-chip.printing {
+  background: rgba(154, 145, 198, 0.2);
+  color: #d8d2f5;
+}
+
+html[data-theme="dark"] .status-chip.done {
+  background: rgba(127, 199, 171, 0.2);
+  color: #beead7;
 }
 
 .status-chip {

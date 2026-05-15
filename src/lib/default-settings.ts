@@ -71,6 +71,13 @@ export const DEFAULT_SETTINGS = {
       cancel: "ยกเลิก"
     }
   },
+  queuePresets: {
+    jobTypes: ["พิมพ์เอกสาร", "เข้าเล่ม", "เคลือบบัตร", "ถ่ายเอกสาร", "ออกแบบงานพิมพ์"]
+  },
+  financePresets: {
+    incomeCategories: ["ค่าบริการ", "งานโปรเจกต์", "งานด่วน", "รายได้อื่น ๆ"],
+    expenseCategories: ["ค่าวัสดุ", "ค่าไฟฟ้า", "ค่าเช่า", "ค่าขนส่ง", "ค่าใช้จ่ายอื่น ๆ"]
+  },
   settingsPage: {
     title: "ตั้งค่าระบบ",
     description: "แก้ข้อความทั้งหมดของเว็บผ่าน JSON ด้านล่าง",
@@ -83,7 +90,8 @@ export const DEFAULT_SETTINGS = {
   line: {
     morningTitle: "{appName} ☀️",
     eventCreatedTitle: "เพิ่มงานใหม่แล้ว! 📌",
-    weeklyTitle: "สรุปประจำสัปดาห์"
+    weeklyTitle: "สรุปประจำสัปดาห์",
+    webhookUrl: ""
   },
   upload: {
     provider: "imgbb"

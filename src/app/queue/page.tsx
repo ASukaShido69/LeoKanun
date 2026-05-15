@@ -34,9 +34,13 @@ interface QueueInlineEditForm {
 
 export default function QueuePage() {
   const { settings } = useAppSettings();
+  const queueJobTypes = settings.queuePresets.jobTypes.length
+    ? settings.queuePresets.jobTypes
+    : ["ประเภทงานทั่วไป"];
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [inlineEditForm, setInlineEditForm] = useState<QueueInlineEditForm>({
@@ -281,25 +285,125 @@ export default function QueuePage() {
     }
   };
 
-  const exportCsv = () => {
-    const header = ["queue_no", "client_name", "job_type", "page_count", "status", "note"];
-    const rows = [...filteredItems].map((item) => [
-      item.queueNo,
-      item.clientName,
-      item.jobType,
-      item.pageCount,
-      item.status,
-      item.note.replace(/,/g, " ")
-    ]);
+  const getStatusLabel = (status: QueueStatus) => {
+    if (status === "waiting") return "รอคิว";
+    if (status === "printing") return "กำลังทำ";
+    return "เสร็จแล้ว";
+  };
 
-    const csvText = [header, ...rows].map((line) => line.join(",")).join("\n");
-    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `queue-${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const exportXlsx = async () => {
+    setExporting(true);
+    setError("");
+
+    try {
+      const ExcelJS = await import("exceljs");
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = settings.app.name;
+      workbook.created = new Date();
+
+      const summary = workbook.addWorksheet("สรุปคิวงาน");
+      summary.columns = [
+        { header: "หัวข้อ", key: "label", width: 28 },
+        { header: "ค่า", key: "value", width: 24 }
+      ];
+
+      summary.addRows([
+        { label: "ชื่อระบบ", value: settings.app.name },
+        { label: "วันที่ส่งออก", value: new Date().toLocaleString("th-TH") },
+        { label: "รายการทั้งหมด", value: filteredItems.length },
+        { label: "รอคิว", value: stats.waiting },
+        { label: "กำลังทำ", value: stats.printing },
+        { label: "เสร็จแล้ว", value: stats.done },
+        { label: "รวมจำนวนหน้า", value: stats.pages },
+        { label: "ความคืบหน้า", value: `${doneProgress}%` }
+      ]);
+
+      summary.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+      summary.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF6B7280" }
+      };
+      summary.eachRow((row, rowNumber) => {
+        row.alignment = { vertical: "middle" };
+        if (rowNumber > 1 && rowNumber % 2 === 0) {
+          row.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF8FAFC" }
+          };
+        }
+      });
+
+      const detail = workbook.addWorksheet("ตารางคิวงาน");
+      detail.columns = [
+        { header: "ลำดับคิว", key: "queueNo", width: 12 },
+        { header: "ชื่อลูกค้า", key: "clientName", width: 24 },
+        { header: "ประเภทงาน", key: "jobType", width: 22 },
+        { header: "จำนวนหน้า", key: "pageCount", width: 12 },
+        { header: "สถานะ", key: "status", width: 14 },
+        { header: "หมายเหตุ", key: "note", width: 38 },
+        { header: "สร้างเมื่อ", key: "createdAt", width: 22 }
+      ];
+
+      filteredItems.forEach((item) => {
+        detail.addRow({
+          queueNo: item.queueNo,
+          clientName: item.clientName,
+          jobType: item.jobType,
+          pageCount: item.pageCount,
+          status: getStatusLabel(item.status),
+          note: item.note || "-",
+          createdAt: new Date(item.createdAt).toLocaleString("th-TH")
+        });
+      });
+
+      detail.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+      detail.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF111827" }
+      };
+      detail.views = [{ state: "frozen", ySplit: 1 }];
+
+      detail.eachRow((row, rowNumber) => {
+        row.alignment = { vertical: "middle" };
+        if (rowNumber > 1 && rowNumber % 2 === 0) {
+          row.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF8FAFC" }
+          };
+        }
+
+        const statusCell = row.getCell(5);
+        if (rowNumber > 1) {
+          if (statusCell.value === "รอคิว") {
+            statusCell.font = { bold: true, color: { argb: "FF9A3412" } };
+          } else if (statusCell.value === "กำลังทำ") {
+            statusCell.font = { bold: true, color: { argb: "FF6D28D9" } };
+          } else if (statusCell.value === "เสร็จแล้ว") {
+            statusCell.font = { bold: true, color: { argb: "FF166534" } };
+          }
+        }
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `queue-report-${new Date().toISOString().split("T")[0]}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "สร้างไฟล์ Excel ไม่สำเร็จ");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -309,9 +413,14 @@ export default function QueuePage() {
           <h1 className="text-2xl font-bold">{settings.app.name} {settings.sidebar.queue}</h1>
           <p className="text-sm text-textSecondary">บริหารคิวงานร้านแบบเรียลไทม์ เพิ่มงานไว เรียงคิวไว ใช้งานง่าย</p>
         </div>
-        <button type="button" onClick={exportCsv} className="inline-flex items-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold">
+        <button
+          type="button"
+          onClick={exportXlsx}
+          disabled={exporting || loading}
+          className="inline-flex items-center gap-2 rounded-xl border border-borderSoft bg-surface px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <Download size={14} />
-          Export CSV
+          {exporting ? "กำลังสร้าง Excel..." : "Export Excel (.xlsx)"}
         </button>
       </section>
 
@@ -362,11 +471,17 @@ export default function QueuePage() {
           />
           <input
             placeholder="ประเภทงาน"
+            list="queue-jobtype-presets"
             value={form.jobType}
             onChange={(event) => setForm((prev) => ({ ...prev, jobType: event.target.value }))}
             className="rounded-xl border border-borderSoft bg-surface p-2"
             required
           />
+          <datalist id="queue-jobtype-presets">
+            {queueJobTypes.map((jobType) => (
+              <option key={jobType} value={jobType} />
+            ))}
+          </datalist>
           <input
             placeholder="จำนวนหน้า"
             type="number"
@@ -387,6 +502,18 @@ export default function QueuePage() {
             เพิ่มเข้าคิว
           </button>
         </form>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {queueJobTypes.map((jobType) => (
+            <button
+              key={jobType}
+              type="button"
+              className="rounded-full border border-borderSoft px-3 py-1 text-xs font-semibold text-textSecondary hover:bg-surface-2"
+              onClick={() => setForm((prev) => ({ ...prev, jobType }))}
+            >
+              {jobType}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="card p-4">

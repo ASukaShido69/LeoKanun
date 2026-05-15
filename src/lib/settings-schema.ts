@@ -74,6 +74,22 @@ export const appSettingsSchema = z.object({
       cancel: z.string().min(1)
     })
   }),
+  queuePresets: z
+    .object({
+      jobTypes: z.array(z.string().min(1))
+    })
+    .default({
+      jobTypes: ["พิมพ์เอกสาร", "เข้าเล่ม", "เคลือบบัตร", "ถ่ายเอกสาร", "ออกแบบงานพิมพ์"]
+    }),
+  financePresets: z
+    .object({
+      incomeCategories: z.array(z.string().min(1)),
+      expenseCategories: z.array(z.string().min(1))
+    })
+    .default({
+      incomeCategories: ["ค่าบริการ", "งานโปรเจกต์", "งานด่วน", "รายได้อื่น ๆ"],
+      expenseCategories: ["ค่าวัสดุ", "ค่าไฟฟ้า", "ค่าเช่า", "ค่าขนส่ง", "ค่าใช้จ่ายอื่น ๆ"]
+    }),
   settingsPage: z.object({
     title: z.string().min(1),
     description: z.string().min(1),
@@ -86,7 +102,8 @@ export const appSettingsSchema = z.object({
   line: z.object({
     morningTitle: z.string().min(1),
     eventCreatedTitle: z.string().min(1),
-    weeklyTitle: z.string().min(1)
+    weeklyTitle: z.string().min(1),
+    webhookUrl: z.string().default("")
   }),
   upload: z.object({
     provider: z.literal("imgbb")

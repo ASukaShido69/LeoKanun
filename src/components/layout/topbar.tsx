@@ -51,7 +51,7 @@ export function Topbar() {
   );
 
   return (
-    <header className="mb-6 rounded-2xl border border-white/70 bg-white/75 p-4 shadow-card backdrop-blur-xl">
+    <header className="mb-6 rounded-2xl border border-borderSoft bg-surface/85 p-4 shadow-card backdrop-blur-xl">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-textSecondary">{settings.topbar.greeting}, {settings.app.name}</p>

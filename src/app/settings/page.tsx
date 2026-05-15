@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { DEFAULT_SETTINGS } from "@/lib/default-settings";
 import { appSettingsSchema, type AppSettingsSchema } from "@/lib/settings-schema";
 import { useAppSettings } from "@/components/providers/settings-provider";
+import { Modal } from "@/components/ui/modal";
 
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -25,6 +26,9 @@ export default function SettingsPage() {
   const [draft, setDraft] = useState<AppSettingsSchema>(DEFAULT_SETTINGS as AppSettingsSchema);
   const [message, setMessage] = useState("");
   const [tab, setTab] = useState<"basic" | "layout" | "json">("basic");
+  const [isLineModalOpen, setIsLineModalOpen] = useState(false);
+  const [lineResult, setLineResult] = useState("");
+  const [lineLoading, setLineLoading] = useState(false);
 
   useEffect(() => {
     setDraft(settings);
@@ -67,6 +71,69 @@ export default function SettingsPage() {
     document.body.removeChild(element);
   };
 
+  const runLineAction = async (runner: () => Promise<unknown>) => {
+    setLineLoading(true);
+    setLineResult("");
+
+    try {
+      const result = await runner();
+      setLineResult(JSON.stringify(result, null, 2));
+    } catch (err) {
+      setLineResult(JSON.stringify({ error: err instanceof Error ? err.message : "LINE action failed" }, null, 2));
+    } finally {
+      setLineLoading(false);
+    }
+  };
+
+  const sendLatestQueueToLine = async () => {
+    await runLineAction(async () => {
+      const response = await fetch("/api/line/queue", { method: "POST" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Failed to send queue to LINE");
+      return payload;
+    });
+  };
+
+  const testLineApiCall = async () => {
+    await runLineAction(async () => {
+      const response = await fetch("/api/line/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "weekly",
+          data: { summary: "LINE Dashboard test call at " + new Date().toLocaleString("th-TH") }
+        })
+      });
+
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "LINE API test failed");
+      return payload;
+    });
+  };
+
+  const testWebhook = async () => {
+    await runLineAction(async () => {
+      const response = await fetch("/api/line/webhook/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUrl: draft.line.webhookUrl || undefined })
+      });
+
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Webhook test failed");
+      return payload;
+    });
+  };
+
+  const checkLineHealth = async () => {
+    await runLineAction(async () => {
+      const response = await fetch("/api/line/health", { method: "GET", cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Health check failed");
+      return payload;
+    });
+  };
+
   return (
     <AppShell>
       <h1 className="mb-4 text-2xl font-bold">{settings.app.name} {settings.settingsPage.title}</h1>
@@ -104,6 +171,18 @@ export default function SettingsPage() {
             <TextField label="Morning Title" value={draft.line.morningTitle} onChange={(v) => setDraft({ ...draft, line: { ...draft.line, morningTitle: v } })} />
             <TextField label="Event Created Title" value={draft.line.eventCreatedTitle} onChange={(v) => setDraft({ ...draft, line: { ...draft.line, eventCreatedTitle: v } })} />
             <TextField label="Weekly Title" value={draft.line.weeklyTitle} onChange={(v) => setDraft({ ...draft, line: { ...draft.line, weeklyTitle: v } })} />
+            <TextField label="Webhook URL" value={draft.line.webhookUrl} onChange={(v) => setDraft({ ...draft, line: { ...draft.line, webhookUrl: v } })} />
+          </article>
+          <article className="card space-y-3 p-4">
+            <h2 className="font-semibold">LINE Dashboard</h2>
+            <p className="text-sm text-textSecondary">ตั้งค่าและทดสอบการทำงาน LINE เช่น ส่งคิวงานล่าสุด, Test API, Webhook และ Health</p>
+            <button
+              type="button"
+              className="rounded-button border border-borderSoft bg-surface px-4 py-2 text-sm font-semibold text-textPrimary hover:bg-surface-2"
+              onClick={() => setIsLineModalOpen(true)}
+            >
+              เปิด LINE Dashboard Modal
+            </button>
           </article>
         </section>
       )}
@@ -124,6 +203,27 @@ export default function SettingsPage() {
             <TextField label="Pending Tasks" value={draft.dashboard.cards.pendingTaskTitle} onChange={(v) => setDraft({ ...draft, dashboard: { ...draft.dashboard, cards: { ...draft.dashboard.cards, pendingTaskTitle: v } } })} />
             <TextField label="Monthly Income" value={draft.dashboard.cards.monthlyIncomeTitle} onChange={(v) => setDraft({ ...draft, dashboard: { ...draft.dashboard, cards: { ...draft.dashboard.cards, monthlyIncomeTitle: v } } })} />
             <TextField label="Near Deadline" value={draft.dashboard.cards.nearDeadlineTitle} onChange={(v) => setDraft({ ...draft, dashboard: { ...draft.dashboard, cards: { ...draft.dashboard.cards, nearDeadlineTitle: v } } })} />
+          </article>
+          <article className="card space-y-3 p-4">
+            <h2 className="font-semibold">Preset Lists (ใช้งานประจำ)</h2>
+            <ListEditor
+              label="ประเภทงานร้าน"
+              items={draft.queuePresets.jobTypes}
+              placeholder="เช่น พิมพ์สี A3"
+              onChange={(next) => setDraft({ ...draft, queuePresets: { ...draft.queuePresets, jobTypes: next } })}
+            />
+            <ListEditor
+              label="หมวดหมู่รายรับ"
+              items={draft.financePresets.incomeCategories}
+              placeholder="เช่น งานพิมพ์ด่วน"
+              onChange={(next) => setDraft({ ...draft, financePresets: { ...draft.financePresets, incomeCategories: next } })}
+            />
+            <ListEditor
+              label="หมวดหมู่รายจ่าย"
+              items={draft.financePresets.expenseCategories}
+              placeholder="เช่น ค่ากระดาษ"
+              onChange={(next) => setDraft({ ...draft, financePresets: { ...draft.financePresets, expenseCategories: next } })}
+            />
           </article>
         </section>
       )}
@@ -160,6 +260,138 @@ export default function SettingsPage() {
           <p className="text-sm">{message}</p>
         </div>
       )}
+
+      <Modal isOpen={isLineModalOpen} onClose={() => setIsLineModalOpen(false)} title="LINE Dashboard" size="lg">
+        <div className="space-y-4">
+          <p className="text-sm text-textSecondary">สำหรับส่งคิวงานร้าน, ทดสอบ API, ทดสอบ Webhook และเช็ก Health แบบเรียลไทม์</p>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              className="btn-primary text-sm font-semibold"
+              onClick={sendLatestQueueToLine}
+              disabled={lineLoading}
+            >
+              ส่งคิวงานร้านล่าสุดไป LINE
+            </button>
+            <button
+              type="button"
+              className="rounded-button border border-borderSoft bg-surface px-4 py-2 text-sm font-semibold text-textPrimary hover:bg-surface-2"
+              onClick={testLineApiCall}
+              disabled={lineLoading}
+            >
+              Test Call API /api/line/send
+            </button>
+            <button
+              type="button"
+              className="rounded-button border border-borderSoft bg-surface px-4 py-2 text-sm font-semibold text-textPrimary hover:bg-surface-2"
+              onClick={testWebhook}
+              disabled={lineLoading}
+            >
+              Test Webhook
+            </button>
+            <button
+              type="button"
+              className="rounded-button border border-borderSoft bg-surface px-4 py-2 text-sm font-semibold text-textPrimary hover:bg-surface-2"
+              onClick={checkLineHealth}
+              disabled={lineLoading}
+            >
+              Check Webhook/API Health
+            </button>
+          </div>
+
+          <label className="block text-sm">
+            <span className="font-medium">Webhook URL (optional for remote test)</span>
+            <input
+              type="url"
+              value={draft.line.webhookUrl}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, line: { ...draft.line, webhookUrl: e.target.value } })}
+              placeholder="https://your-webhook.example.com/line"
+              className="mt-1 w-full rounded-xl border border-borderSoft p-2"
+            />
+          </label>
+
+          <button
+            type="button"
+            className="rounded-button border border-borderSoft bg-surface px-4 py-2 text-sm font-semibold text-textPrimary hover:bg-surface-2"
+            onClick={onSave}
+            disabled={lineLoading}
+          >
+            บันทึก Webhook URL ลง Settings
+          </button>
+
+          <div className="rounded-xl border border-borderSoft bg-surface-2 p-3">
+            <p className="mb-2 text-sm font-semibold">Result</p>
+            <pre className="max-h-72 overflow-auto text-xs text-textSecondary">{lineLoading ? "กำลังประมวลผล..." : lineResult || "ยังไม่มีผลลัพธ์"}</pre>
+          </div>
+        </div>
+      </Modal>
     </AppShell>
+  );
+}
+
+function ListEditor({
+  label,
+  items,
+  placeholder,
+  onChange
+}: {
+  label: string;
+  items: string[];
+  placeholder: string;
+  onChange: (next: string[]) => void;
+}) {
+  const [input, setInput] = useState("");
+
+  const addItem = () => {
+    const next = input.trim();
+    if (!next) return;
+    if (items.includes(next)) {
+      setInput("");
+      return;
+    }
+    onChange([...items, next]);
+    setInput("");
+  };
+
+  const removeItem = (index: number) => {
+    onChange(items.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="space-y-2 rounded-xl border border-borderSoft p-3">
+      <p className="text-sm font-semibold">{label}</p>
+      <div className="flex gap-2">
+        <input
+          value={input}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
+          placeholder={placeholder}
+          className="w-full rounded-xl border border-borderSoft p-2 text-sm"
+        />
+        <button
+          type="button"
+          onClick={addItem}
+          className="rounded-button border border-borderSoft bg-surface px-3 py-2 text-xs font-semibold"
+        >
+          เพิ่ม
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {items.length === 0 ? <span className="text-xs text-textSecondary">ยังไม่มีรายการ</span> : null}
+        {items.map((item, index) => (
+          <span key={`${item}-${index}`} className="inline-flex items-center gap-1 rounded-full border border-borderSoft px-2 py-1 text-xs">
+            {item}
+            <button
+              type="button"
+              onClick={() => removeItem(index)}
+              className="rounded-full px-1 text-red-500 hover:bg-red-50"
+              aria-label="remove"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

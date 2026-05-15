@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "./modal";
 import { useAppSettings } from "@/components/providers/settings-provider";
 
@@ -19,11 +19,15 @@ export interface FinanceFormData {
   date: string;
 }
 
-const expenseCategories = ["เงินเดือน", "ค่าโฆษณา", "ค่าเช่า", "ค่าไฟฟ้า", "อื่น ๆ"];
-const incomeCategories = ["งานรับเหมา", "โครงการ", "บริการ", "อื่น ๆ"];
-
 export function AddFinanceModal({ isOpen, onClose, onSubmit, isLoading }: AddFinanceModalProps) {
   const { settings } = useAppSettings();
+  const expenseCategories = settings.financePresets.expenseCategories.length
+    ? settings.financePresets.expenseCategories
+    : ["ค่าใช้จ่ายอื่น ๆ"];
+  const incomeCategories = settings.financePresets.incomeCategories.length
+    ? settings.financePresets.incomeCategories
+    : ["รายรับอื่น ๆ"];
+
   const [formData, setFormData] = useState<FinanceFormData>({
     type: "expense",
     amount: 0,
@@ -33,6 +37,12 @@ export function AddFinanceModal({ isOpen, onClose, onSubmit, isLoading }: AddFin
   });
 
   const categories = formData.type === "expense" ? expenseCategories : incomeCategories;
+
+  useEffect(() => {
+    if (!categories.includes(formData.category)) {
+      setFormData((prev) => ({ ...prev, category: categories[0] }));
+    }
+  }, [categories, formData.category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

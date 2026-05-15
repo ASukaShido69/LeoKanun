@@ -12,15 +12,24 @@ const createFinanceSchema = z.object({
 export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
-      .from("finance")
-      .select("*")
+      .from("transactions")
+      .select("id, type, amount, category, note, date")
       .order("date", { ascending: false });
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 });
     }
 
-    return Response.json(data || []);
+    const normalized = (data || []).map((row: any) => ({
+      id: row.id,
+      type: row.type,
+      amount: row.amount,
+      category: row.category,
+      description: row.note || "",
+      date: row.date
+    }));
+
+    return Response.json(normalized);
   } catch (err) {
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -40,22 +49,32 @@ export async function POST(request: Request) {
     }
 
     const { data, error } = await supabaseAdmin
-      .from("finance")
+      .from("transactions")
       .insert({
         type: parsed.data.type,
         amount: parsed.data.amount,
         category: parsed.data.category,
-        description: parsed.data.description,
+        note: parsed.data.description,
         date: parsed.data.date
       })
-      .select()
+      .select("id, type, amount, category, note, date")
       .single();
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 });
     }
 
-    return Response.json({ ok: true, data });
+    return Response.json({
+      ok: true,
+      data: {
+        id: data.id,
+        type: data.type,
+        amount: data.amount,
+        category: data.category,
+        description: data.note || "",
+        date: data.date
+      }
+    });
   } catch (err) {
     console.error("Error creating finance entry:", err);
     return Response.json({ error: "Internal server error" }, { status: 500 });

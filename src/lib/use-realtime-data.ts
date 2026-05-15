@@ -31,6 +31,17 @@ export interface JobData {
   status: string;
 }
 
+export interface QueueData {
+  id: string;
+  queue_no: number;
+  client_name: string;
+  job_type: string;
+  page_count: number;
+  note?: string;
+  status: "waiting" | "printing" | "done";
+  created_at: string;
+}
+
 export function useRealtimeEvents() {
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,4 +243,50 @@ export function useRealtimeJobs() {
   }, []);
 
   return { jobs, loading, error };
+}
+
+export function useRealtimeQueue() {
+  const [queueItems, setQueueItems] = useState<QueueData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+
+  const refetch = async () => {
+    setLoading(true);
+    setError("");
+
+    const { data, error: err } = await supabase
+      .from("queue_jobs")
+      .select("*")
+      .order("queue_no", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (err) {
+      setError(err.message);
+    } else {
+      setQueueItems((data as QueueData[]) || []);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    refetch();
+
+    const channel = supabase
+      .channel("public:queue_jobs")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "queue_jobs" },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
+
+  return { queueItems, loading, error, refetch };
 }

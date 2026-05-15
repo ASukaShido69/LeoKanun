@@ -8,7 +8,7 @@ export async function DELETE(
     const { id } = await params;
 
     const { error } = await supabaseAdmin
-      .from("finance")
+      .from("transactions")
       .delete()
       .eq("id", id);
 

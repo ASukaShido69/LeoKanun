@@ -72,6 +72,13 @@ export interface AppSettings {
       cancel: string;
     };
   };
+  queuePresets: {
+    jobTypes: string[];
+  };
+  financePresets: {
+    incomeCategories: string[];
+    expenseCategories: string[];
+  };
   settingsPage: {
     title: string;
     description: string;
@@ -85,6 +92,7 @@ export interface AppSettings {
     morningTitle: string;
     eventCreatedTitle: string;
     weeklyTitle: string;
+    webhookUrl: string;
   };
   upload: {
     provider: string;
